@@ -214,10 +214,13 @@ class DockerProvider(EnvironmentProvider):
         return full
 
     def _exec(self, state: ContainerState, command: str) -> CommandResult:
-        # demux=True splits stdout/stdr so the kernel's runners read the
-        # snapshot body from stdout and errors from stderr (docker's own runner
-        # uses combined output; the kernel expects them separated).
-        result = state.docker_container.exec_run(command, user="root", demux=True)
+        # Run the command through ``sh -c`` so shell semantics the runners rely on
+        # (``&&`` chains, pipes, redirects, base64 heredocs) work. exec_run splits
+        # a bare string on whitespace and execs it directly with no shell, which
+        # makes ``test X && Y`` fail as ``test: extra argument '&&'``. A list form
+        # passes the whole command as one arg to ``sh -c`` (no re-splitting), matching
+        # the e2b backend's shell semantics. demux=True separates stdout/stderr.
+        result = state.docker_container.exec_run(["sh", "-c", command], user="root", demux=True)
         output = result.output
         if output is None:
             stdout, stderr = "", ""

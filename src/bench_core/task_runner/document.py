@@ -167,6 +167,12 @@ class DocumentOperationExecutor:
         # The scheduler stop event prevents a *new* complete task from starting.
         # It must not interrupt a recipe that has already begun.
         self.deadline: float | None = None
+        # Per-tool-call wall-clock timings (per-call instrumentation, additive).
+        self._call_timings: list[dict] = []
+        # Per-tool-call wall-clock timings (fidelity-only: no command/control-flow
+        # change). Each entry: {phase, idx, fn, wall_ms, ok}. Logged once per task
+        # so callers can aggregate median/p95 across tasks without touching commands.
+        self._call_timings: list[dict] = []
 
     def _check_cancelled(self) -> None:
         if self.deadline is not None and time.monotonic() >= self.deadline:
@@ -226,16 +232,29 @@ class DocumentOperationExecutor:
             return False, time.perf_counter() - started, step_times, timed_out, message
         finally:
             self.deadline = None
+            if self._call_timings:
+                logger.info("[CALLTIMINGS] " + json.dumps(self._call_timings))
 
     def _execute_phase(self, phase_id: str, step_times: dict[str, float]) -> tuple[bool, str]:
         started = time.perf_counter()
         try:
             self._check_cancelled()
             phase = self.phases[phase_id]
-            for source_call in phase["source_tool_calls"]:
+            for idx, source_call in enumerate(phase["source_tool_calls"]):
                 self._check_cancelled()
                 call = source_call["tool_call"]
-                ok, detail = self._execute_tool_call(call["function_name"], call["arguments"])
+                fn = call["function_name"]
+                c0 = time.perf_counter()
+                ok, detail = self._execute_tool_call(fn, call["arguments"])
+                self._call_timings.append(
+                    {
+                        "phase": phase_id,
+                        "idx": idx,
+                        "fn": fn,
+                        "wall_ms": round((time.perf_counter() - c0) * 1000, 1),
+                        "ok": ok,
+                    }
+                )
                 if not ok:
                     return False, f"{phase_id}: {detail}"
             return True, ""
