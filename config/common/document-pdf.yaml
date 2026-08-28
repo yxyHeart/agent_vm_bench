@@ -35,7 +35,7 @@ e2b:
     E2B_HTTP_SSL: "false"
 
 docker:
-  image: "ubuntu-document-bench:24.04-linuxarm64"  # document image (LibreOffice/Poppler + seed + validate)
+  image: "ubuntu-document-bench:pdf-opt"           # document image with PIL fast PNG (compress_level=1)
   container_prefix: "doc-bench-pdf"                # Container name prefix (doc-bench-pdf-1, ...)
   cpu_limit: 2.0                                   # CPU limit per container (--cpus)
   memory_limit: "4g"                               # Memory limit per container (-m); LibreOffice recalc is memory-heavy

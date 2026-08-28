@@ -1,0 +1,491 @@
+<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" width="1200" height="474" onload="init(evt)" viewBox="0 0 1200 474" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:fg="http://github.com/jonhoo/inferno"><!--Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples.--><!--NOTES: --><defs><linearGradient id="background" y1="0" y2="1" x1="0" x2="0"><stop stop-color="#eeeeee" offset="5%"/><stop stop-color="#eeeeb0" offset="95%"/></linearGradient></defs><style type="text/css">
+text { font-family:monospace; font-size:12px }
+#title { text-anchor:middle; font-size:17px; }
+#matched { text-anchor:end; }
+#search { text-anchor:end; opacity:0.1; cursor:pointer; }
+#search:hover, #search.show { opacity:1; }
+#subtitle { text-anchor:middle; font-color:rgb(160,160,160); }
+#unzoom { cursor:pointer; }
+#frames > *:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+.hide { display:none; }
+.parent { opacity:0.5; }
+</style><script type="text/ecmascript"><![CDATA[
+        var nametype = 'Function:';
+        var fontsize = 12;
+        var fontwidth = 0.59;
+        var xpad = 10;
+        var inverted = true;
+        var searchcolor = 'rgb(230,0,230)';
+        var fluiddrawing = true;
+        var truncate_text_right = false;
+    ]]><![CDATA["use strict";
+var details, searchbtn, unzoombtn, matchedtxt, svg, searching, frames, known_font_width;
+function init(evt) {
+    details = document.getElementById("details").firstChild;
+    searchbtn = document.getElementById("search");
+    unzoombtn = document.getElementById("unzoom");
+    matchedtxt = document.getElementById("matched");
+    svg = document.getElementsByTagName("svg")[0];
+    frames = document.getElementById("frames");
+    known_font_width = get_monospace_width(frames);
+    total_samples = parseInt(frames.attributes.total_samples.value);
+    searching = 0;
+
+    // Use GET parameters to restore a flamegraph's state.
+    var restore_state = function() {
+        var params = get_params();
+        if (params.x && params.y)
+            zoom(find_group(document.querySelector('[*|x="' + params.x + '"][y="' + params.y + '"]')));
+        if (params.s)
+            search(params.s);
+    };
+
+    if (fluiddrawing) {
+        // Make width dynamic so the SVG fits its parent's width.
+        svg.removeAttribute("width");
+        // Edge requires us to have a viewBox that gets updated with size changes.
+        var isEdge = /Edge\/\d./i.test(navigator.userAgent);
+        if (!isEdge) {
+            svg.removeAttribute("viewBox");
+        }
+        var update_for_width_change = function() {
+            if (isEdge) {
+                svg.attributes.viewBox.value = "0 0 " + svg.width.baseVal.value + " " + svg.height.baseVal.value;
+            }
+
+            // Keep consistent padding on left and right of frames container.
+            frames.attributes.width.value = svg.width.baseVal.value - xpad * 2;
+
+            // Text truncation needs to be adjusted for the current width.
+            update_text_for_elements(frames.children);
+
+            // Keep search elements at a fixed distance from right edge.
+            var svgWidth = svg.width.baseVal.value;
+            searchbtn.attributes.x.value = svgWidth - xpad;
+            matchedtxt.attributes.x.value = svgWidth - xpad;
+        };
+        window.addEventListener('resize', function() {
+            update_for_width_change();
+        });
+        // This needs to be done asynchronously for Safari to work.
+        setTimeout(function() {
+            unzoom();
+            update_for_width_change();
+            restore_state();
+        }, 0);
+    } else {
+        restore_state();
+    }
+}
+// event listeners
+window.addEventListener("click", function(e) {
+    var target = find_group(e.target);
+    if (target) {
+        if (target.nodeName == "a") {
+            if (e.ctrlKey === false) return;
+            e.preventDefault();
+        }
+        if (target.classList.contains("parent")) unzoom();
+        zoom(target);
+
+        // set parameters for zoom state
+        var el = target.querySelector("rect");
+        if (el && el.attributes && el.attributes.y && el.attributes["fg:x"]) {
+            var params = get_params()
+            params.x = el.attributes["fg:x"].value;
+            params.y = el.attributes.y.value;
+            history.replaceState(null, null, parse_params(params));
+        }
+    }
+    else if (e.target.id == "unzoom") {
+        unzoom();
+
+        // remove zoom state
+        var params = get_params();
+        if (params.x) delete params.x;
+        if (params.y) delete params.y;
+        history.replaceState(null, null, parse_params(params));
+    }
+    else if (e.target.id == "search") search_prompt();
+}, false)
+// mouse-over for info
+// show
+window.addEventListener("mouseover", function(e) {
+    var target = find_group(e.target);
+    if (target) details.nodeValue = nametype + " " + g_to_text(target);
+}, false)
+// clear
+window.addEventListener("mouseout", function(e) {
+    var target = find_group(e.target);
+    if (target) details.nodeValue = ' ';
+}, false)
+// ctrl-F for search
+window.addEventListener("keydown",function (e) {
+    if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+        e.preventDefault();
+        search_prompt();
+    }
+}, false)
+// functions
+function get_params() {
+    var params = {};
+    var paramsarr = window.location.search.substr(1).split('&');
+    for (var i = 0; i < paramsarr.length; ++i) {
+        var tmp = paramsarr[i].split("=");
+        if (!tmp[0] || !tmp[1]) continue;
+        params[tmp[0]]  = decodeURIComponent(tmp[1]);
+    }
+    return params;
+}
+function parse_params(params) {
+    var uri = "?";
+    for (var key in params) {
+        uri += key + '=' + encodeURIComponent(params[key]) + '&';
+    }
+    if (uri.slice(-1) == "&")
+        uri = uri.substring(0, uri.length - 1);
+    if (uri == '?')
+        uri = window.location.href.split('?')[0];
+    return uri;
+}
+function find_child(node, selector) {
+    var children = node.querySelectorAll(selector);
+    if (children.length) return children[0];
+    return;
+}
+function find_group(node) {
+    var parent = node.parentElement;
+    if (!parent) return;
+    if (parent.id == "frames") return node;
+    return find_group(parent);
+}
+function orig_save(e, attr, val) {
+    if (e.attributes["fg:orig_" + attr] != undefined) return;
+    if (e.attributes[attr] == undefined) return;
+    if (val == undefined) val = e.attributes[attr].value;
+    e.setAttribute("fg:orig_" + attr, val);
+}
+function orig_load(e, attr) {
+    if (e.attributes["fg:orig_"+attr] == undefined) return;
+    e.attributes[attr].value = e.attributes["fg:orig_" + attr].value;
+    e.removeAttribute("fg:orig_" + attr);
+}
+function g_to_text(e) {
+    var text = find_child(e, "title").firstChild.nodeValue;
+    return (text)
+}
+function g_to_func(e) {
+    var func = g_to_text(e);
+    // if there's any manipulation we want to do to the function
+    // name before it's searched, do it here before returning.
+    return (func);
+}
+function get_monospace_width(frames) {
+    // Given the id="frames" element, return the width of text characters if
+    // this is a monospace font, otherwise return 0.
+    text = find_child(frames.children[0], "text");
+    originalContent = text.textContent;
+    text.textContent = "!";
+    bangWidth = text.getComputedTextLength();
+    text.textContent = "W";
+    wWidth = text.getComputedTextLength();
+    text.textContent = originalContent;
+    if (bangWidth === wWidth) {
+        return bangWidth;
+    } else {
+        return 0;
+    }
+}
+function update_text_for_elements(elements) {
+    // In order to render quickly in the browser, you want to do one pass of
+    // reading attributes, and one pass of mutating attributes. See
+    // https://web.dev/avoid-large-complex-layouts-and-layout-thrashing/ for details.
+
+    // Fall back to inefficient calculation, if we're variable-width font.
+    // TODO This should be optimized somehow too.
+    if (known_font_width === 0) {
+        for (var i = 0; i < elements.length; i++) {
+            update_text(elements[i]);
+        }
+        return;
+    }
+
+    var textElemNewAttributes = [];
+    for (var i = 0; i < elements.length; i++) {
+        var e = elements[i];
+        var r = find_child(e, "rect");
+        var t = find_child(e, "text");
+        var w = parseFloat(r.attributes.width.value) * frames.attributes.width.value / 100 - 3;
+        var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+        var newX = format_percent((parseFloat(r.attributes.x.value) + (100 * 3 / frames.attributes.width.value)));
+
+        // Smaller than this size won't fit anything
+        if (w < 2 * known_font_width) {
+            textElemNewAttributes.push([newX, ""]);
+            continue;
+        }
+
+        // Fit in full text width
+        if (txt.length * known_font_width < w) {
+            textElemNewAttributes.push([newX, txt]);
+            continue;
+        }
+
+        var substringLength = Math.floor(w / known_font_width) - 2;
+        if (truncate_text_right) {
+            // Truncate the right side of the text.
+            textElemNewAttributes.push([newX, txt.substring(0, substringLength) + ".."]);
+            continue;
+        } else {
+            // Truncate the left side of the text.
+            textElemNewAttributes.push([newX, ".." + txt.substring(txt.length - substringLength, txt.length)]);
+            continue;
+        }
+    }
+
+    console.assert(textElemNewAttributes.length === elements.length, "Resize failed, please file a bug at https://github.com/jonhoo/inferno/");
+
+    // Now that we know new textContent, set it all in one go so we don't refresh a bazillion times.
+    for (var i = 0; i < elements.length; i++) {
+        var e = elements[i];
+        var values = textElemNewAttributes[i];
+        var t = find_child(e, "text");
+        t.attributes.x.value = values[0];
+        t.textContent = values[1];
+    }
+}
+
+function update_text(e) {
+    var r = find_child(e, "rect");
+    var t = find_child(e, "text");
+    var w = parseFloat(r.attributes.width.value) * frames.attributes.width.value / 100 - 3;
+    var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+    t.attributes.x.value = format_percent((parseFloat(r.attributes.x.value) + (100 * 3 / frames.attributes.width.value)));
+
+    // Smaller than this size won't fit anything
+    if (w < 2 * fontsize * fontwidth) {
+        t.textContent = "";
+        return;
+    }
+    t.textContent = txt;
+    // Fit in full text width
+    if (t.getComputedTextLength() < w)
+        return;
+    if (truncate_text_right) {
+        // Truncate the right side of the text.
+        for (var x = txt.length - 2; x > 0; x--) {
+            if (t.getSubStringLength(0, x + 2) <= w) {
+                t.textContent = txt.substring(0, x) + "..";
+                return;
+            }
+        }
+    } else {
+        // Truncate the left side of the text.
+        for (var x = 2; x < txt.length; x++) {
+            if (t.getSubStringLength(x - 2, txt.length) <= w) {
+                t.textContent = ".." + txt.substring(x, txt.length);
+                return;
+            }
+        }
+    }
+    t.textContent = "";
+}
+// zoom
+function zoom_reset(e) {
+    if (e.tagName == "rect") {
+        e.attributes.x.value = format_percent(100 * parseInt(e.attributes["fg:x"].value) / total_samples);
+        e.attributes.width.value = format_percent(100 * parseInt(e.attributes["fg:w"].value) / total_samples);
+    }
+    if (e.childNodes == undefined) return;
+    for(var i = 0, c = e.childNodes; i < c.length; i++) {
+        zoom_reset(c[i]);
+    }
+}
+function zoom_child(e, x, zoomed_width_samples) {
+    if (e.tagName == "text") {
+        var parent_x = parseFloat(find_child(e.parentNode, "rect[x]").attributes.x.value);
+        e.attributes.x.value = format_percent(parent_x + (100 * 3 / frames.attributes.width.value));
+    } else if (e.tagName == "rect") {
+        e.attributes.x.value = format_percent(100 * (parseInt(e.attributes["fg:x"].value) - x) / zoomed_width_samples);
+        e.attributes.width.value = format_percent(100 * parseInt(e.attributes["fg:w"].value) / zoomed_width_samples);
+    }
+    if (e.childNodes == undefined) return;
+    for(var i = 0, c = e.childNodes; i < c.length; i++) {
+        zoom_child(c[i], x, zoomed_width_samples);
+    }
+}
+function zoom_parent(e) {
+    if (e.attributes) {
+        if (e.attributes.x != undefined) {
+            e.attributes.x.value = "0.0%";
+        }
+        if (e.attributes.width != undefined) {
+            e.attributes.width.value = "100.0%";
+        }
+    }
+    if (e.childNodes == undefined) return;
+    for(var i = 0, c = e.childNodes; i < c.length; i++) {
+        zoom_parent(c[i]);
+    }
+}
+function zoom(node) {
+    var attr = find_child(node, "rect").attributes;
+    var width = parseInt(attr["fg:w"].value);
+    var xmin = parseInt(attr["fg:x"].value);
+    var xmax = xmin + width;
+    var ymin = parseFloat(attr.y.value);
+    unzoombtn.classList.remove("hide");
+    var el = frames.children;
+    var to_update_text = [];
+    for (var i = 0; i < el.length; i++) {
+        var e = el[i];
+        var a = find_child(e, "rect").attributes;
+        var ex = parseInt(a["fg:x"].value);
+        var ew = parseInt(a["fg:w"].value);
+        // Is it an ancestor
+        if (!inverted) {
+            var upstack = parseFloat(a.y.value) > ymin;
+        } else {
+            var upstack = parseFloat(a.y.value) < ymin;
+        }
+        if (upstack) {
+            // Direct ancestor
+            if (ex <= xmin && (ex+ew) >= xmax) {
+                e.classList.add("parent");
+                zoom_parent(e);
+                to_update_text.push(e);
+            }
+            // not in current path
+            else
+                e.classList.add("hide");
+        }
+        // Children maybe
+        else {
+            // no common path
+            if (ex < xmin || ex >= xmax) {
+                e.classList.add("hide");
+            }
+            else {
+                zoom_child(e, xmin, width);
+                to_update_text.push(e);
+            }
+        }
+    }
+    update_text_for_elements(to_update_text);
+}
+function unzoom() {
+    unzoombtn.classList.add("hide");
+    var el = frames.children;
+    for(var i = 0; i < el.length; i++) {
+        el[i].classList.remove("parent");
+        el[i].classList.remove("hide");
+        zoom_reset(el[i]);
+    }
+    update_text_for_elements(el);
+}
+// search
+function reset_search() {
+    var el = document.querySelectorAll("#frames rect");
+    for (var i = 0; i < el.length; i++) {
+        orig_load(el[i], "fill")
+    }
+    var params = get_params();
+    delete params.s;
+    history.replaceState(null, null, parse_params(params));
+}
+function search_prompt() {
+    if (!searching) {
+        var term = prompt("Enter a search term (regexp " +
+            "allowed, eg: ^ext4_)", "");
+        if (term != null) {
+            search(term)
+        }
+    } else {
+        reset_search();
+        searching = 0;
+        searchbtn.classList.remove("show");
+        searchbtn.firstChild.nodeValue = "Search"
+        matchedtxt.classList.add("hide");
+        matchedtxt.firstChild.nodeValue = ""
+    }
+}
+function search(term) {
+    var re = new RegExp(term);
+    var el = frames.children;
+    var matches = new Object();
+    var maxwidth = 0;
+    for (var i = 0; i < el.length; i++) {
+        var e = el[i];
+        // Skip over frames which are either not visible, or below the zoomed-to frame
+        if (e.classList.contains("hide") || e.classList.contains("parent")) {
+            continue;
+        }
+        var func = g_to_func(e);
+        var rect = find_child(e, "rect");
+        if (func == null || rect == null)
+            continue;
+        // Save max width. Only works as we have a root frame
+        var w = parseInt(rect.attributes["fg:w"].value);
+        if (w > maxwidth)
+            maxwidth = w;
+        if (func.match(re)) {
+            // highlight
+            var x = parseInt(rect.attributes["fg:x"].value);
+            orig_save(rect, "fill");
+            rect.attributes.fill.value = searchcolor;
+            // remember matches
+            if (matches[x] == undefined) {
+                matches[x] = w;
+            } else {
+                if (w > matches[x]) {
+                    // overwrite with parent
+                    matches[x] = w;
+                }
+            }
+            searching = 1;
+        }
+    }
+    if (!searching)
+        return;
+    var params = get_params();
+    params.s = term;
+    history.replaceState(null, null, parse_params(params));
+
+    searchbtn.classList.add("show");
+    searchbtn.firstChild.nodeValue = "Reset Search";
+    // calculate percent matched, excluding vertical overlap
+    var count = 0;
+    var lastx = -1;
+    var lastw = 0;
+    var keys = Array();
+    for (k in matches) {
+        if (matches.hasOwnProperty(k))
+            keys.push(k);
+    }
+    // sort the matched frames by their x location
+    // ascending, then width descending
+    keys.sort(function(a, b){
+        return a - b;
+    });
+    // Step through frames saving only the biggest bottom-up frames
+    // thanks to the sort order. This relies on the tree property
+    // where children are always smaller than their parents.
+    for (var k in keys) {
+        var x = parseInt(keys[k]);
+        var w = matches[keys[k]];
+        if (x >= lastx + lastw) {
+            count += w;
+            lastx = x;
+            lastw = w;
+        }
+    }
+    // display matched percent
+    matchedtxt.classList.remove("hide");
+    var pct = 100 * count / maxwidth;
+    if (pct != 100) pct = pct.toFixed(1);
+    matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+}
+function format_percent(n) {
+    return n.toFixed(4) + "%";
+}
+]]></script><rect x="0" y="0" width="100%" height="474" fill="url(#background)"/><text id="title" fill="rgb(0,0,0)" x="50.0000%" y="24.00">py-spy record -o /tmp/flames/step13_P04-00_exec.svg --duration 300 -- python3 input/verify_xlsx_enhanced.py output/monthly_operations_report.xlsx output/formula_recalc.json output/business_verification.json output/monthly_operations_summary.csv output/reconciliation_summary.csv</text><text id="details" fill="rgb(0,0,0)" x="10" y="40.00"> </text><text id="unzoom" class="hide" fill="rgb(0,0,0)" x="10" y="24.00">Reset Zoom</text><text id="search" fill="rgb(0,0,0)" x="1190" y="24.00">Search</text><text id="matched" fill="rgb(0,0,0)" x="1190" y="463.00"> </text><svg id="frames" x="10" width="1180" total_samples="2307"><g><title>&lt;module&gt; (openpyxl/workbook/workbook.py:17) (3 samples, 0.13%)</title><rect x="0.1300%" y="356" width="0.1300%" height="15" fill="rgb(227,0,7)" fg:x="3" fg:w="3"/><text x="0.3800%" y="366.50"></text></g><g><title>_find_and_load (&lt;frozen importlib._bootstrap&gt;:1360) (3 samples, 0.13%)</title><rect x="0.1300%" y="372" width="0.1300%" height="15" fill="rgb(217,0,24)" fg:x="3" fg:w="3"/><text x="0.3800%" y="382.50"></text></g><g><title>_find_and_load_unlocked (&lt;frozen importlib._bootstrap&gt;:1331) (3 samples, 0.13%)</title><rect x="0.1300%" y="388" width="0.1300%" height="15" fill="rgb(221,193,54)" fg:x="3" fg:w="3"/><text x="0.3800%" y="398.50"></text></g><g><title>_load_unlocked (&lt;frozen importlib._bootstrap&gt;:935) (3 samples, 0.13%)</title><rect x="0.1300%" y="404" width="0.1300%" height="15" fill="rgb(248,212,6)" fg:x="3" fg:w="3"/><text x="0.3800%" y="414.50"></text></g><g><title>exec_module (&lt;frozen importlib._bootstrap_external&gt;:995) (3 samples, 0.13%)</title><rect x="0.1300%" y="420" width="0.1300%" height="15" fill="rgb(208,68,35)" fg:x="3" fg:w="3"/><text x="0.3800%" y="430.50"></text></g><g><title>_call_with_frames_removed (&lt;frozen importlib._bootstrap&gt;:488) (3 samples, 0.13%)</title><rect x="0.1300%" y="436" width="0.1300%" height="15" fill="rgb(232,128,0)" fg:x="3" fg:w="3"/><text x="0.3800%" y="446.50"></text></g><g><title>&lt;module&gt; (openpyxl/workbook/workbook.py:7) (3 samples, 0.13%)</title><rect x="0.2601%" y="356" width="0.1300%" height="15" fill="rgb(207,160,47)" fg:x="6" fg:w="3"/><text x="0.5101%" y="366.50"></text></g><g><title>_find_and_load (&lt;frozen importlib._bootstrap&gt;:1360) (3 samples, 0.13%)</title><rect x="0.2601%" y="372" width="0.1300%" height="15" fill="rgb(228,23,34)" fg:x="6" fg:w="3"/><text x="0.5101%" y="382.50"></text></g><g><title>_find_and_load_unlocked (&lt;frozen importlib._bootstrap&gt;:1331) (3 samples, 0.13%)</title><rect x="0.2601%" y="388" width="0.1300%" height="15" fill="rgb(218,30,26)" fg:x="6" fg:w="3"/><text x="0.5101%" y="398.50"></text></g><g><title>_load_unlocked (&lt;frozen importlib._bootstrap&gt;:935) (3 samples, 0.13%)</title><rect x="0.2601%" y="404" width="0.1300%" height="15" fill="rgb(220,122,19)" fg:x="6" fg:w="3"/><text x="0.5101%" y="414.50"></text></g><g><title>exec_module (&lt;frozen importlib._bootstrap_external&gt;:995) (3 samples, 0.13%)</title><rect x="0.2601%" y="420" width="0.1300%" height="15" fill="rgb(250,228,42)" fg:x="6" fg:w="3"/><text x="0.5101%" y="430.50"></text></g><g><title>_call_with_frames_removed (&lt;frozen importlib._bootstrap&gt;:488) (3 samples, 0.13%)</title><rect x="0.2601%" y="436" width="0.1300%" height="15" fill="rgb(240,193,28)" fg:x="6" fg:w="3"/><text x="0.5101%" y="446.50"></text></g><g><title>&lt;module&gt; (verify_xlsx_enhanced.py:15) (7 samples, 0.30%)</title><rect x="0.1300%" y="68" width="0.3034%" height="15" fill="rgb(216,20,37)" fg:x="3" fg:w="7"/><text x="0.3800%" y="78.50"></text></g><g><title>_find_and_load (&lt;frozen importlib._bootstrap&gt;:1360) (7 samples, 0.30%)</title><rect x="0.1300%" y="84" width="0.3034%" height="15" fill="rgb(206,188,39)" fg:x="3" fg:w="7"/><text x="0.3800%" y="94.50"></text></g><g><title>_find_and_load_unlocked (&lt;frozen importlib._bootstrap&gt;:1331) (7 samples, 0.30%)</title><rect x="0.1300%" y="100" width="0.3034%" height="15" fill="rgb(217,207,13)" fg:x="3" fg:w="7"/><text x="0.3800%" y="110.50"></text></g><g><title>_load_unlocked (&lt;frozen importlib._bootstrap&gt;:935) (7 samples, 0.30%)</title><rect x="0.1300%" y="116" width="0.3034%" height="15" fill="rgb(231,73,38)" fg:x="3" fg:w="7"/><text x="0.3800%" y="126.50"></text></g><g><title>exec_module (&lt;frozen importlib._bootstrap_external&gt;:995) (7 samples, 0.30%)</title><rect x="0.1300%" y="132" width="0.3034%" height="15" fill="rgb(225,20,46)" fg:x="3" fg:w="7"/><text x="0.3800%" y="142.50"></text></g><g><title>_call_with_frames_removed (&lt;frozen importlib._bootstrap&gt;:488) (7 samples, 0.30%)</title><rect x="0.1300%" y="148" width="0.3034%" height="15" fill="rgb(210,31,41)" fg:x="3" fg:w="7"/><text x="0.3800%" y="158.50"></text></g><g><title>&lt;module&gt; (openpyxl/__init__.py:7) (7 samples, 0.30%)</title><rect x="0.1300%" y="164" width="0.3034%" height="15" fill="rgb(221,200,47)" fg:x="3" fg:w="7"/><text x="0.3800%" y="174.50"></text></g><g><title>_find_and_load (&lt;frozen importlib._bootstrap&gt;:1360) (7 samples, 0.30%)</title><rect x="0.1300%" y="180" width="0.3034%" height="15" fill="rgb(226,26,5)" fg:x="3" fg:w="7"/><text x="0.3800%" y="190.50"></text></g><g><title>_find_and_load_unlocked (&lt;frozen importlib._bootstrap&gt;:1331) (7 samples, 0.30%)</title><rect x="0.1300%" y="196" width="0.3034%" height="15" fill="rgb(249,33,26)" fg:x="3" fg:w="7"/><text x="0.3800%" y="206.50"></text></g><g><title>_load_unlocked (&lt;frozen importlib._bootstrap&gt;:935) (7 samples, 0.30%)</title><rect x="0.1300%" y="212" width="0.3034%" height="15" fill="rgb(235,183,28)" fg:x="3" fg:w="7"/><text x="0.3800%" y="222.50"></text></g><g><title>exec_module (&lt;frozen importlib._bootstrap_external&gt;:995) (7 samples, 0.30%)</title><rect x="0.1300%" y="228" width="0.3034%" height="15" fill="rgb(221,5,38)" fg:x="3" fg:w="7"/><text x="0.3800%" y="238.50"></text></g><g><title>_call_with_frames_removed (&lt;frozen importlib._bootstrap&gt;:488) (7 samples, 0.30%)</title><rect x="0.1300%" y="244" width="0.3034%" height="15" fill="rgb(247,18,42)" fg:x="3" fg:w="7"/><text x="0.3800%" y="254.50"></text></g><g><title>&lt;module&gt; (openpyxl/workbook/__init__.py:4) (7 samples, 0.30%)</title><rect x="0.1300%" y="260" width="0.3034%" height="15" fill="rgb(241,131,45)" fg:x="3" fg:w="7"/><text x="0.3800%" y="270.50"></text></g><g><title>_find_and_load (&lt;frozen importlib._bootstrap&gt;:1360) (7 samples, 0.30%)</title><rect x="0.1300%" y="276" width="0.3034%" height="15" fill="rgb(249,31,29)" fg:x="3" fg:w="7"/><text x="0.3800%" y="286.50"></text></g><g><title>_find_and_load_unlocked (&lt;frozen importlib._bootstrap&gt;:1331) (7 samples, 0.30%)</title><rect x="0.1300%" y="292" width="0.3034%" height="15" fill="rgb(225,111,53)" fg:x="3" fg:w="7"/><text x="0.3800%" y="302.50"></text></g><g><title>_load_unlocked (&lt;frozen importlib._bootstrap&gt;:935) (7 samples, 0.30%)</title><rect x="0.1300%" y="308" width="0.3034%" height="15" fill="rgb(238,160,17)" fg:x="3" fg:w="7"/><text x="0.3800%" y="318.50"></text></g><g><title>exec_module (&lt;frozen importlib._bootstrap_external&gt;:995) (7 samples, 0.30%)</title><rect x="0.1300%" y="324" width="0.3034%" height="15" fill="rgb(214,148,48)" fg:x="3" fg:w="7"/><text x="0.3800%" y="334.50"></text></g><g><title>_call_with_frames_removed (&lt;frozen importlib._bootstrap&gt;:488) (7 samples, 0.30%)</title><rect x="0.1300%" y="340" width="0.3034%" height="15" fill="rgb(232,36,49)" fg:x="3" fg:w="7"/><text x="0.3800%" y="350.50"></text></g><g><title>max_column (openpyxl/worksheet/worksheet.py:374) (17 samples, 0.74%)</title><rect x="0.4335%" y="116" width="0.7369%" height="15" fill="rgb(209,103,24)" fg:x="10" fg:w="17"/><text x="0.6835%" y="126.50"></text></g><g><title>&lt;genexpr&gt; (openpyxl/worksheet/worksheet.py:374) (14 samples, 0.61%)</title><rect x="0.5635%" y="132" width="0.6068%" height="15" fill="rgb(229,88,8)" fg:x="13" fg:w="14"/><text x="0.8135%" y="142.50"></text></g><g><title>verify_formula_workbook (verify_xlsx_enhanced.py:107) (24 samples, 1.04%)</title><rect x="0.4335%" y="100" width="1.0403%" height="15" fill="rgb(213,181,19)" fg:x="10" fg:w="24"/><text x="0.6835%" y="110.50"></text></g><g><title>max_row (openpyxl/worksheet/worksheet.py:350) (7 samples, 0.30%)</title><rect x="1.1704%" y="116" width="0.3034%" height="15" fill="rgb(254,191,54)" fg:x="27" fg:w="7"/><text x="1.4204%" y="126.50"></text></g><g><title>verify_formula_workbook (verify_xlsx_enhanced.py:109) (16 samples, 0.69%)</title><rect x="1.4738%" y="100" width="0.6935%" height="15" fill="rgb(241,83,37)" fg:x="34" fg:w="16"/><text x="1.7238%" y="110.50"></text></g><g><title>max_row (openpyxl/worksheet/worksheet.py:350) (16 samples, 0.69%)</title><rect x="1.4738%" y="116" width="0.6935%" height="15" fill="rgb(233,36,39)" fg:x="34" fg:w="16"/><text x="1.7238%" y="126.50"></text></g><g><title>verify_formula_workbook (verify_xlsx_enhanced.py:110) (18 samples, 0.78%)</title><rect x="2.1673%" y="100" width="0.7802%" height="15" fill="rgb(226,3,54)" fg:x="50" fg:w="18"/><text x="2.4173%" y="110.50"></text></g><g><title>max_column (openpyxl/worksheet/worksheet.py:374) (18 samples, 0.78%)</title><rect x="2.1673%" y="116" width="0.7802%" height="15" fill="rgb(245,192,40)" fg:x="50" fg:w="18"/><text x="2.4173%" y="126.50"></text></g><g><title>&lt;genexpr&gt; (openpyxl/worksheet/worksheet.py:374) (14 samples, 0.61%)</title><rect x="2.3407%" y="132" width="0.6068%" height="15" fill="rgb(238,167,29)" fg:x="54" fg:w="14"/><text x="2.5907%" y="142.50"></text></g><g><title>verify_formula_workbook (verify_xlsx_enhanced.py:215) (77 samples, 3.34%)</title><rect x="2.9476%" y="100" width="3.3377%" height="15" fill="rgb(232,182,51)" fg:x="68" fg:w="77"/><text x="3.1976%" y="110.50">ver..</text></g><g><title>read_events (xml/etree/ElementTree.py:1310) (3 samples, 0.13%)</title><rect x="6.4153%" y="196" width="0.1300%" height="15" fill="rgb(231,60,39)" fg:x="148" fg:w="3"/><text x="6.6653%" y="206.50"></text></g><g><title>iterator (xml/etree/ElementTree.py:1236) (5 samples, 0.22%)</title><rect x="6.4153%" y="180" width="0.2167%" height="15" fill="rgb(208,69,12)" fg:x="148" fg:w="5"/><text x="6.6653%" y="190.50"></text></g><g><title>read_string_table (openpyxl/reader/strings.py:16) (53 samples, 2.30%)</title><rect x="6.3286%" y="164" width="2.2974%" height="15" fill="rgb(235,93,37)" fg:x="146" fg:w="53"/><text x="6.5786%" y="174.50">r..</text></g><g><title>iterator (xml/etree/ElementTree.py:1241) (44 samples, 1.91%)</title><rect x="6.7187%" y="180" width="1.9072%" height="15" fill="rgb(213,116,39)" fg:x="155" fg:w="44"/><text x="6.9687%" y="190.50">i..</text></g><g><title>feed (xml/etree/ElementTree.py:1284) (44 samples, 1.91%)</title><rect x="6.7187%" y="196" width="1.9072%" height="15" fill="rgb(222,207,29)" fg:x="155" fg:w="44"/><text x="6.9687%" y="206.50">f..</text></g><g><title>read_string_table (openpyxl/reader/strings.py:17) (3 samples, 0.13%)</title><rect x="8.6259%" y="164" width="0.1300%" height="15" fill="rgb(206,96,30)" fg:x="199" fg:w="3"/><text x="8.8759%" y="174.50"></text></g><g><title>content (openpyxl/cell/text.py:180) (5 samples, 0.22%)</title><rect x="9.1894%" y="180" width="0.2167%" height="15" fill="rgb(218,138,4)" fg:x="212" fg:w="5"/><text x="9.4394%" y="190.50"></text></g><g><title>__get__ (openpyxl/descriptors/base.py:234) (3 samples, 0.13%)</title><rect x="9.2761%" y="196" width="0.1300%" height="15" fill="rgb(250,191,14)" fg:x="214" fg:w="3"/><text x="9.5261%" y="206.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:101) (3 samples, 0.13%)</title><rect x="9.5362%" y="180" width="0.1300%" height="15" fill="rgb(239,60,40)" fg:x="220" fg:w="3"/><text x="9.7862%" y="190.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:167) (11 samples, 0.48%)</title><rect x="9.9263%" y="196" width="0.4768%" height="15" fill="rgb(206,27,48)" fg:x="229" fg:w="11"/><text x="10.1763%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/nested.py:33) (8 samples, 0.35%)</title><rect x="10.0564%" y="212" width="0.3468%" height="15" fill="rgb(225,35,8)" fg:x="232" fg:w="8"/><text x="10.3064%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/sequence.py:27) (5 samples, 0.22%)</title><rect x="10.4898%" y="212" width="0.2167%" height="15" fill="rgb(250,213,24)" fg:x="242" fg:w="5"/><text x="10.7398%" y="222.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:168) (10 samples, 0.43%)</title><rect x="10.4031%" y="196" width="0.4335%" height="15" fill="rgb(247,123,22)" fg:x="240" fg:w="10"/><text x="10.6531%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/sequence.py:31) (3 samples, 0.13%)</title><rect x="10.7065%" y="212" width="0.1300%" height="15" fill="rgb(231,138,38)" fg:x="247" fg:w="3"/><text x="10.9565%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/sequence.py:27) (4 samples, 0.17%)</title><rect x="10.9666%" y="212" width="0.1734%" height="15" fill="rgb(231,145,46)" fg:x="253" fg:w="4"/><text x="11.2166%" y="222.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:169) (14 samples, 0.61%)</title><rect x="10.8366%" y="196" width="0.6068%" height="15" fill="rgb(251,118,11)" fg:x="250" fg:w="14"/><text x="11.0866%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/sequence.py:31) (5 samples, 0.22%)</title><rect x="11.2267%" y="212" width="0.2167%" height="15" fill="rgb(217,147,25)" fg:x="259" fg:w="5"/><text x="11.4767%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:25) (3 samples, 0.13%)</title><rect x="11.3134%" y="228" width="0.1300%" height="15" fill="rgb(247,81,37)" fg:x="261" fg:w="3"/><text x="11.5634%" y="238.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:40) (5 samples, 0.22%)</title><rect x="11.5735%" y="212" width="0.2167%" height="15" fill="rgb(209,12,38)" fg:x="267" fg:w="5"/><text x="11.8235%" y="222.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:103) (52 samples, 2.25%)</title><rect x="9.6662%" y="180" width="2.2540%" height="15" fill="rgb(227,1,9)" fg:x="223" fg:w="52"/><text x="9.9162%" y="190.50">f..</text></g><g><title>__init__ (openpyxl/cell/text.py:170) (11 samples, 0.48%)</title><rect x="11.4434%" y="196" width="0.4768%" height="15" fill="rgb(248,47,43)" fg:x="264" fg:w="11"/><text x="11.6934%" y="206.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:53) (4 samples, 0.17%)</title><rect x="12.0069%" y="180" width="0.1734%" height="15" fill="rgb(221,10,30)" fg:x="277" fg:w="4"/><text x="12.2569%" y="190.50"></text></g><g><title>localname (openpyxl/xml/functions.py:80) (7 samples, 0.30%)</title><rect x="12.4837%" y="196" width="0.3034%" height="15" fill="rgb(210,229,1)" fg:x="288" fg:w="7"/><text x="12.7337%" y="206.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:74) (13 samples, 0.56%)</title><rect x="12.3104%" y="180" width="0.5635%" height="15" fill="rgb(222,148,37)" fg:x="284" fg:w="13"/><text x="12.5604%" y="190.50"></text></g><g><title>read_string_table (openpyxl/reader/strings.py:18) (100 samples, 4.33%)</title><rect x="8.7560%" y="164" width="4.3346%" height="15" fill="rgb(234,67,33)" fg:x="202" fg:w="100"/><text x="9.0060%" y="174.50">read_..</text></g><g><title>read_string_table (openpyxl/reader/strings.py:20) (4 samples, 0.17%)</title><rect x="13.1339%" y="164" width="0.1734%" height="15" fill="rgb(247,98,35)" fg:x="303" fg:w="4"/><text x="13.3839%" y="174.50"></text></g><g><title>read (openpyxl/reader/excel.py:291) (162 samples, 7.02%)</title><rect x="6.3286%" y="132" width="7.0221%" height="15" fill="rgb(247,138,52)" fg:x="146" fg:w="162"/><text x="6.5786%" y="142.50">read (ope..</text></g><g><title>read_strings (openpyxl/reader/excel.py:147) (162 samples, 7.02%)</title><rect x="6.3286%" y="148" width="7.0221%" height="15" fill="rgb(213,79,30)" fg:x="146" fg:w="162"/><text x="6.5786%" y="158.50">read_stri..</text></g><g><title>read_worksheets (openpyxl/reader/excel.py:236) (4 samples, 0.17%)</title><rect x="13.4807%" y="148" width="0.1734%" height="15" fill="rgb(246,177,23)" fg:x="311" fg:w="4"/><text x="13.7307%" y="158.50"></text></g><g><title>read_events (xml/etree/ElementTree.py:1309) (8 samples, 0.35%)</title><rect x="15.3013%" y="228" width="0.3468%" height="15" fill="rgb(230,62,27)" fg:x="353" fg:w="8"/><text x="15.5513%" y="238.50"></text></g><g><title>read_events (xml/etree/ElementTree.py:1310) (14 samples, 0.61%)</title><rect x="15.6480%" y="228" width="0.6068%" height="15" fill="rgb(216,154,8)" fg:x="361" fg:w="14"/><text x="15.8980%" y="238.50"></text></g><g><title>read_events (xml/etree/ElementTree.py:1311) (21 samples, 0.91%)</title><rect x="16.2549%" y="228" width="0.9103%" height="15" fill="rgb(244,35,45)" fg:x="375" fg:w="21"/><text x="16.5049%" y="238.50"></text></g><g><title>iterator (xml/etree/ElementTree.py:1236) (49 samples, 2.12%)</title><rect x="15.2146%" y="212" width="2.1240%" height="15" fill="rgb(251,115,12)" fg:x="351" fg:w="49"/><text x="15.4646%" y="222.50">i..</text></g><g><title>read_events (xml/etree/ElementTree.py:1314) (4 samples, 0.17%)</title><rect x="17.1651%" y="228" width="0.1734%" height="15" fill="rgb(240,54,50)" fg:x="396" fg:w="4"/><text x="17.4151%" y="238.50"></text></g><g><title>_read1 (zipfile/__init__.py:1081) (14 samples, 0.61%)</title><rect x="17.4252%" y="244" width="0.6068%" height="15" fill="rgb(233,84,52)" fg:x="402" fg:w="14"/><text x="17.6752%" y="254.50"></text></g><g><title>iterator (xml/etree/ElementTree.py:1238) (21 samples, 0.91%)</title><rect x="17.3385%" y="212" width="0.9103%" height="15" fill="rgb(207,117,47)" fg:x="400" fg:w="21"/><text x="17.5885%" y="222.50"></text></g><g><title>read (zipfile/__init__.py:1005) (21 samples, 0.91%)</title><rect x="17.3385%" y="228" width="0.9103%" height="15" fill="rgb(249,43,39)" fg:x="400" fg:w="21"/><text x="17.5885%" y="238.50"></text></g><g><title>_read1 (zipfile/__init__.py:1095) (5 samples, 0.22%)</title><rect x="18.0321%" y="244" width="0.2167%" height="15" fill="rgb(209,38,44)" fg:x="416" fg:w="5"/><text x="18.2821%" y="254.50"></text></g><g><title>_update_crc (zipfile/__init__.py:1020) (5 samples, 0.22%)</title><rect x="18.0321%" y="260" width="0.2167%" height="15" fill="rgb(236,212,23)" fg:x="416" fg:w="5"/><text x="18.2821%" y="270.50"></text></g><g><title>parse (openpyxl/worksheet/_reader.py:156) (846 samples, 36.67%)</title><rect x="14.3043%" y="196" width="36.6710%" height="15" fill="rgb(242,79,21)" fg:x="330" fg:w="846"/><text x="14.5543%" y="206.50">parse (openpyxl/worksheet/_reader.py:156)</text></g><g><title>iterator (xml/etree/ElementTree.py:1241) (755 samples, 32.73%)</title><rect x="18.2488%" y="212" width="32.7265%" height="15" fill="rgb(211,96,35)" fg:x="421" fg:w="755"/><text x="18.4988%" y="222.50">iterator (xml/etree/ElementTree.py:1241)</text></g><g><title>feed (xml/etree/ElementTree.py:1284) (755 samples, 32.73%)</title><rect x="18.2488%" y="228" width="32.7265%" height="15" fill="rgb(253,215,40)" fg:x="421" fg:w="755"/><text x="18.4988%" y="238.50">feed (xml/etree/ElementTree.py:1284)</text></g><g><title>parse (openpyxl/worksheet/_reader.py:157) (14 samples, 0.61%)</title><rect x="50.9753%" y="196" width="0.6068%" height="15" fill="rgb(211,81,21)" fg:x="1176" fg:w="14"/><text x="51.2253%" y="206.50"></text></g><g><title>parse (openpyxl/worksheet/_reader.py:158) (4 samples, 0.17%)</title><rect x="51.5821%" y="196" width="0.1734%" height="15" fill="rgb(208,190,38)" fg:x="1190" fg:w="4"/><text x="51.8321%" y="206.50"></text></g><g><title>parse (openpyxl/worksheet/_reader.py:161) (8 samples, 0.35%)</title><rect x="51.7555%" y="196" width="0.3468%" height="15" fill="rgb(235,213,38)" fg:x="1194" fg:w="8"/><text x="52.0055%" y="206.50"></text></g><g><title>parse (openpyxl/worksheet/_reader.py:166) (12 samples, 0.52%)</title><rect x="52.1456%" y="196" width="0.5202%" height="15" fill="rgb(237,122,38)" fg:x="1203" fg:w="12"/><text x="52.3956%" y="206.50"></text></g><g><title>parse_row (openpyxl/worksheet/_reader.py:287) (3 samples, 0.13%)</title><rect x="52.8392%" y="212" width="0.1300%" height="15" fill="rgb(244,218,35)" fg:x="1219" fg:w="3"/><text x="53.0892%" y="222.50"></text></g><g><title>parse_row (openpyxl/worksheet/_reader.py:298) (9 samples, 0.39%)</title><rect x="52.9692%" y="212" width="0.3901%" height="15" fill="rgb(240,68,47)" fg:x="1222" fg:w="9"/><text x="53.2192%" y="222.50"></text></g><g><title>parse_row (openpyxl/worksheet/_reader.py:299) (5 samples, 0.22%)</title><rect x="53.3593%" y="212" width="0.2167%" height="15" fill="rgb(210,16,53)" fg:x="1231" fg:w="5"/><text x="53.6093%" y="222.50"></text></g><g><title>parse_row (openpyxl/worksheet/_reader.py:301) (4 samples, 0.17%)</title><rect x="53.5761%" y="212" width="0.1734%" height="15" fill="rgb(235,124,12)" fg:x="1236" fg:w="4"/><text x="53.8261%" y="222.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:190) (14 samples, 0.61%)</title><rect x="54.9632%" y="228" width="0.6068%" height="15" fill="rgb(224,169,11)" fg:x="1268" fg:w="14"/><text x="55.2132%" y="238.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:192) (3 samples, 0.13%)</title><rect x="55.6567%" y="228" width="0.1300%" height="15" fill="rgb(250,166,2)" fg:x="1284" fg:w="3"/><text x="55.9067%" y="238.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:194) (27 samples, 1.17%)</title><rect x="55.8734%" y="228" width="1.1704%" height="15" fill="rgb(242,216,29)" fg:x="1289" fg:w="27"/><text x="56.1234%" y="238.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:196) (4 samples, 0.17%)</title><rect x="57.0438%" y="228" width="0.1734%" height="15" fill="rgb(230,116,27)" fg:x="1316" fg:w="4"/><text x="57.2938%" y="238.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:199) (41 samples, 1.78%)</title><rect x="57.2172%" y="228" width="1.7772%" height="15" fill="rgb(228,99,48)" fg:x="1320" fg:w="41"/><text x="57.4672%" y="238.50">p..</text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:201) (6 samples, 0.26%)</title><rect x="58.9944%" y="228" width="0.2601%" height="15" fill="rgb(253,11,6)" fg:x="1361" fg:w="6"/><text x="59.2444%" y="238.50"></text></g><g><title>coordinate_to_tuple (openpyxl/utils/cell.py:210) (25 samples, 1.08%)</title><rect x="60.0347%" y="244" width="1.0837%" height="15" fill="rgb(247,143,39)" fg:x="1385" fg:w="25"/><text x="60.2847%" y="254.50"></text></g><g><title>coordinate_to_tuple (openpyxl/utils/cell.py:211) (15 samples, 0.65%)</title><rect x="61.1183%" y="244" width="0.6502%" height="15" fill="rgb(236,97,10)" fg:x="1410" fg:w="15"/><text x="61.3683%" y="254.50"></text></g><g><title>coordinate_to_tuple (openpyxl/utils/cell.py:213) (11 samples, 0.48%)</title><rect x="61.7685%" y="244" width="0.4768%" height="15" fill="rgb(233,208,19)" fg:x="1425" fg:w="11"/><text x="62.0185%" y="254.50"></text></g><g><title>coordinate_to_tuple (openpyxl/utils/cell.py:214) (14 samples, 0.61%)</title><rect x="62.2453%" y="244" width="0.6068%" height="15" fill="rgb(216,164,2)" fg:x="1436" fg:w="14"/><text x="62.4953%" y="254.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:202) (117 samples, 5.07%)</title><rect x="59.2544%" y="228" width="5.0715%" height="15" fill="rgb(220,129,5)" fg:x="1367" fg:w="117"/><text x="59.5044%" y="238.50">parse_..</text></g><g><title>coordinate_to_tuple (openpyxl/utils/cell.py:215) (34 samples, 1.47%)</title><rect x="62.8522%" y="244" width="1.4738%" height="15" fill="rgb(242,17,10)" fg:x="1450" fg:w="34"/><text x="63.1022%" y="254.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:208) (37 samples, 1.60%)</title><rect x="64.3693%" y="228" width="1.6038%" height="15" fill="rgb(242,107,0)" fg:x="1485" fg:w="37"/><text x="64.6193%" y="238.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:213) (9 samples, 0.39%)</title><rect x="66.0598%" y="228" width="0.3901%" height="15" fill="rgb(251,28,31)" fg:x="1524" fg:w="9"/><text x="66.3098%" y="238.50"></text></g><g><title>_cast_number (openpyxl/worksheet/_reader.py:82) (7 samples, 0.30%)</title><rect x="66.7967%" y="244" width="0.3034%" height="15" fill="rgb(233,223,10)" fg:x="1541" fg:w="7"/><text x="67.0467%" y="254.50"></text></g><g><title>_cast_number (openpyxl/worksheet/_reader.py:83) (9 samples, 0.39%)</title><rect x="67.1001%" y="244" width="0.3901%" height="15" fill="rgb(215,21,27)" fg:x="1548" fg:w="9"/><text x="67.3501%" y="254.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:214) (32 samples, 1.39%)</title><rect x="66.4499%" y="228" width="1.3871%" height="15" fill="rgb(232,23,21)" fg:x="1533" fg:w="32"/><text x="66.6999%" y="238.50"></text></g><g><title>_cast_number (openpyxl/worksheet/_reader.py:84) (8 samples, 0.35%)</title><rect x="67.4902%" y="244" width="0.3468%" height="15" fill="rgb(244,5,23)" fg:x="1557" fg:w="8"/><text x="67.7402%" y="254.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:215) (9 samples, 0.39%)</title><rect x="67.8370%" y="228" width="0.3901%" height="15" fill="rgb(226,81,46)" fg:x="1565" fg:w="9"/><text x="68.0870%" y="238.50"></text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:227) (9 samples, 0.39%)</title><rect x="68.3138%" y="228" width="0.3901%" height="15" fill="rgb(247,70,30)" fg:x="1576" fg:w="9"/><text x="68.5638%" y="238.50"></text></g><g><title>parse (openpyxl/worksheet/_reader.py:167) (402 samples, 17.43%)</title><rect x="52.6658%" y="196" width="17.4252%" height="15" fill="rgb(212,68,19)" fg:x="1215" fg:w="402"/><text x="52.9158%" y="206.50">parse (openpyxl/worksheet/_..</text></g><g><title>parse_row (openpyxl/worksheet/_reader.py:303) (377 samples, 16.34%)</title><rect x="53.7495%" y="212" width="16.3416%" height="15" fill="rgb(240,187,13)" fg:x="1240" fg:w="377"/><text x="53.9995%" y="222.50">parse_row (openpyxl/works..</text></g><g><title>parse_cell (openpyxl/worksheet/_reader.py:244) (32 samples, 1.39%)</title><rect x="68.7039%" y="228" width="1.3871%" height="15" fill="rgb(223,113,26)" fg:x="1585" fg:w="32"/><text x="68.9539%" y="238.50"></text></g><g><title>bind_cells (openpyxl/worksheet/_reader.py:368) (1,324 samples, 57.39%)</title><rect x="13.6541%" y="180" width="57.3906%" height="15" fill="rgb(206,192,2)" fg:x="315" fg:w="1324"/><text x="13.9041%" y="190.50">bind_cells (openpyxl/worksheet/_reader.py:368)</text></g><g><title>parse (openpyxl/worksheet/_reader.py:168) (22 samples, 0.95%)</title><rect x="70.0910%" y="196" width="0.9536%" height="15" fill="rgb(241,108,4)" fg:x="1617" fg:w="22"/><text x="70.3410%" y="206.50"></text></g><g><title>bind_cells (openpyxl/worksheet/_reader.py:369) (3 samples, 0.13%)</title><rect x="71.0446%" y="180" width="0.1300%" height="15" fill="rgb(247,173,49)" fg:x="1639" fg:w="3"/><text x="71.2946%" y="190.50"></text></g><g><title>bind_cells (openpyxl/worksheet/_reader.py:370) (39 samples, 1.69%)</title><rect x="71.1747%" y="180" width="1.6905%" height="15" fill="rgb(224,114,35)" fg:x="1642" fg:w="39"/><text x="71.4247%" y="190.50"></text></g><g><title>parent (openpyxl/workbook/child.py:57) (8 samples, 0.35%)</title><rect x="72.5184%" y="196" width="0.3468%" height="15" fill="rgb(245,159,27)" fg:x="1673" fg:w="8"/><text x="72.7684%" y="206.50"></text></g><g><title>__init__ (openpyxl/cell/cell.py:108) (11 samples, 0.48%)</title><rect x="76.8531%" y="196" width="0.4768%" height="15" fill="rgb(245,172,44)" fg:x="1773" fg:w="11"/><text x="77.1031%" y="206.50"></text></g><g><title>__init__ (openpyxl/styles/styleable.py:132) (4 samples, 0.17%)</title><rect x="77.8067%" y="212" width="0.1734%" height="15" fill="rgb(236,23,11)" fg:x="1795" fg:w="4"/><text x="78.0567%" y="222.50"></text></g><g><title>__init__ (openpyxl/styles/styleable.py:134) (3 samples, 0.13%)</title><rect x="78.0234%" y="212" width="0.1300%" height="15" fill="rgb(205,117,38)" fg:x="1800" fg:w="3"/><text x="78.2734%" y="222.50"></text></g><g><title>__init__ (openpyxl/styles/styleable.py:135) (80 samples, 3.47%)</title><rect x="78.1534%" y="212" width="3.4677%" height="15" fill="rgb(237,72,25)" fg:x="1803" fg:w="80"/><text x="78.4034%" y="222.50">__i..</text></g><g><title>__new__ (openpyxl/styles/cell_style.py:53) (51 samples, 2.21%)</title><rect x="79.4105%" y="228" width="2.2107%" height="15" fill="rgb(244,70,9)" fg:x="1832" fg:w="51"/><text x="79.6605%" y="238.50">_..</text></g><g><title>__init__ (openpyxl/cell/cell.py:109) (102 samples, 4.42%)</title><rect x="77.3299%" y="196" width="4.4213%" height="15" fill="rgb(217,125,39)" fg:x="1784" fg:w="102"/><text x="77.5799%" y="206.50">__ini..</text></g><g><title>__init__ (openpyxl/styles/styleable.py:136) (3 samples, 0.13%)</title><rect x="81.6212%" y="212" width="0.1300%" height="15" fill="rgb(235,36,10)" fg:x="1883" fg:w="3"/><text x="81.8712%" y="222.50"></text></g><g><title>bind_cells (openpyxl/worksheet/_reader.py:371) (215 samples, 9.32%)</title><rect x="72.8652%" y="180" width="9.3195%" height="15" fill="rgb(251,123,47)" fg:x="1681" fg:w="215"/><text x="73.1152%" y="190.50">bind_cells (o..</text></g><g><title>__init__ (openpyxl/cell/cell.py:120) (3 samples, 0.13%)</title><rect x="82.0546%" y="196" width="0.1300%" height="15" fill="rgb(221,13,13)" fg:x="1893" fg:w="3"/><text x="82.3046%" y="206.50"></text></g><g><title>bind_cells (openpyxl/worksheet/_reader.py:372) (5 samples, 0.22%)</title><rect x="82.1847%" y="180" width="0.2167%" height="15" fill="rgb(238,131,9)" fg:x="1896" fg:w="5"/><text x="82.4347%" y="190.50"></text></g><g><title>bind_cells (openpyxl/worksheet/_reader.py:373) (5 samples, 0.22%)</title><rect x="82.4014%" y="180" width="0.2167%" height="15" fill="rgb(211,50,8)" fg:x="1901" fg:w="5"/><text x="82.6514%" y="190.50"></text></g><g><title>bind_cells (openpyxl/worksheet/_reader.py:374) (56 samples, 2.43%)</title><rect x="82.6181%" y="180" width="2.4274%" height="15" fill="rgb(245,182,24)" fg:x="1906" fg:w="56"/><text x="82.8681%" y="190.50">bi..</text></g><g><title>bind_all (openpyxl/worksheet/_reader.py:465) (1,658 samples, 71.87%)</title><rect x="13.6541%" y="164" width="71.8682%" height="15" fill="rgb(242,14,37)" fg:x="315" fg:w="1658"/><text x="13.9041%" y="174.50">bind_all (openpyxl/worksheet/_reader.py:465)</text></g><g><title>bind_cells (openpyxl/worksheet/_reader.py:377) (11 samples, 0.48%)</title><rect x="85.0455%" y="180" width="0.4768%" height="15" fill="rgb(246,228,12)" fg:x="1962" fg:w="11"/><text x="85.2955%" y="190.50"></text></g><g><title>max_row (openpyxl/worksheet/worksheet.py:350) (11 samples, 0.48%)</title><rect x="85.0455%" y="196" width="0.4768%" height="15" fill="rgb(213,55,15)" fg:x="1962" fg:w="11"/><text x="85.2955%" y="206.50"></text></g><g><title>__init__ (openpyxl/worksheet/dimensions.py:105) (6 samples, 0.26%)</title><rect x="86.3026%" y="196" width="0.2601%" height="15" fill="rgb(209,9,3)" fg:x="1991" fg:w="6"/><text x="86.5526%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:72) (4 samples, 0.17%)</title><rect x="86.3893%" y="212" width="0.1734%" height="15" fill="rgb(230,59,30)" fg:x="1993" fg:w="4"/><text x="86.6393%" y="222.50"></text></g><g><title>__init__ (openpyxl/worksheet/dimensions.py:111) (3 samples, 0.13%)</title><rect x="86.6493%" y="196" width="0.1300%" height="15" fill="rgb(209,121,21)" fg:x="1999" fg:w="3"/><text x="86.8993%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:71) (3 samples, 0.13%)</title><rect x="86.9094%" y="228" width="0.1300%" height="15" fill="rgb(220,109,13)" fg:x="2005" fg:w="3"/><text x="87.1594%" y="238.50"></text></g><g><title>__init__ (openpyxl/worksheet/dimensions.py:44) (5 samples, 0.22%)</title><rect x="86.8661%" y="212" width="0.2167%" height="15" fill="rgb(232,18,1)" fg:x="2004" fg:w="5"/><text x="87.1161%" y="222.50"></text></g><g><title>__init__ (openpyxl/worksheet/dimensions.py:45) (4 samples, 0.17%)</title><rect x="87.0828%" y="212" width="0.1734%" height="15" fill="rgb(215,41,42)" fg:x="2009" fg:w="4"/><text x="87.3328%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:168) (3 samples, 0.13%)</title><rect x="87.1261%" y="228" width="0.1300%" height="15" fill="rgb(224,123,36)" fg:x="2010" fg:w="3"/><text x="87.3761%" y="238.50"></text></g><g><title>__init__ (openpyxl/worksheet/dimensions.py:46) (7 samples, 0.30%)</title><rect x="87.2562%" y="212" width="0.3034%" height="15" fill="rgb(240,125,3)" fg:x="2013" fg:w="7"/><text x="87.5062%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:72) (5 samples, 0.22%)</title><rect x="87.3429%" y="228" width="0.2167%" height="15" fill="rgb(205,98,50)" fg:x="2015" fg:w="5"/><text x="87.5929%" y="238.50"></text></g><g><title>main (verify_xlsx_enhanced.py:364) (2,017 samples, 87.43%)</title><rect x="0.4335%" y="84" width="87.4296%" height="15" fill="rgb(205,185,37)" fg:x="10" fg:w="2017"/><text x="0.6835%" y="94.50">main (verify_xlsx_enhanced.py:364)</text></g><g><title>verify_formula_workbook (verify_xlsx_enhanced.py:93) (1,882 samples, 81.58%)</title><rect x="6.2852%" y="100" width="81.5778%" height="15" fill="rgb(238,207,15)" fg:x="145" fg:w="1882"/><text x="6.5352%" y="110.50">verify_formula_workbook (verify_xlsx_enhanced.py:93)</text></g><g><title>load_workbook (openpyxl/reader/excel.py:348) (1,881 samples, 81.53%)</title><rect x="6.3286%" y="116" width="81.5345%" height="15" fill="rgb(213,199,42)" fg:x="146" fg:w="1881"/><text x="6.5786%" y="126.50">load_workbook (openpyxl/reader/excel.py:348)</text></g><g><title>read (openpyxl/reader/excel.py:303) (1,717 samples, 74.43%)</title><rect x="13.4374%" y="132" width="74.4257%" height="15" fill="rgb(235,201,11)" fg:x="310" fg:w="1717"/><text x="13.6874%" y="142.50">read (openpyxl/reader/excel.py:303)</text></g><g><title>read_worksheets (openpyxl/reader/excel.py:237) (1,712 samples, 74.21%)</title><rect x="13.6541%" y="148" width="74.2089%" height="15" fill="rgb(207,46,11)" fg:x="315" fg:w="1712"/><text x="13.9041%" y="158.50">read_worksheets (openpyxl/reader/excel.py:237)</text></g><g><title>bind_all (openpyxl/worksheet/_reader.py:470) (54 samples, 2.34%)</title><rect x="85.5223%" y="164" width="2.3407%" height="15" fill="rgb(241,35,35)" fg:x="1973" fg:w="54"/><text x="85.7723%" y="174.50">b..</text></g><g><title>bind_row_dimensions (openpyxl/worksheet/_reader.py:449) (52 samples, 2.25%)</title><rect x="85.6090%" y="180" width="2.2540%" height="15" fill="rgb(243,32,47)" fg:x="1975" fg:w="52"/><text x="85.8590%" y="190.50">b..</text></g><g><title>__init__ (openpyxl/worksheet/dimensions.py:112) (25 samples, 1.08%)</title><rect x="86.7794%" y="196" width="1.0837%" height="15" fill="rgb(247,202,23)" fg:x="2002" fg:w="25"/><text x="87.0294%" y="206.50"></text></g><g><title>__init__ (openpyxl/worksheet/dimensions.py:47) (7 samples, 0.30%)</title><rect x="87.5596%" y="212" width="0.3034%" height="15" fill="rgb(219,102,11)" fg:x="2020" fg:w="7"/><text x="87.8096%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:168) (7 samples, 0.30%)</title><rect x="87.5596%" y="228" width="0.3034%" height="15" fill="rgb(243,110,44)" fg:x="2020" fg:w="7"/><text x="87.8096%" y="238.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:72) (5 samples, 0.22%)</title><rect x="87.6463%" y="244" width="0.2167%" height="15" fill="rgb(222,74,54)" fg:x="2022" fg:w="5"/><text x="87.8963%" y="254.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:47) (3 samples, 0.13%)</title><rect x="87.7330%" y="260" width="0.1300%" height="15" fill="rgb(216,99,12)" fg:x="2024" fg:w="3"/><text x="87.9830%" y="270.50"></text></g><g><title>iterator (xml/etree/ElementTree.py:1236) (4 samples, 0.17%)</title><rect x="87.9497%" y="180" width="0.1734%" height="15" fill="rgb(226,22,26)" fg:x="2029" fg:w="4"/><text x="88.1997%" y="190.50"></text></g><g><title>read_events (xml/etree/ElementTree.py:1311) (3 samples, 0.13%)</title><rect x="87.9931%" y="196" width="0.1300%" height="15" fill="rgb(217,163,10)" fg:x="2030" fg:w="3"/><text x="88.2431%" y="206.50"></text></g><g><title>read_string_table (openpyxl/reader/strings.py:16) (44 samples, 1.91%)</title><rect x="87.8630%" y="164" width="1.9072%" height="15" fill="rgb(213,25,53)" fg:x="2027" fg:w="44"/><text x="88.1130%" y="174.50">r..</text></g><g><title>iterator (xml/etree/ElementTree.py:1241) (37 samples, 1.60%)</title><rect x="88.1664%" y="180" width="1.6038%" height="15" fill="rgb(252,105,26)" fg:x="2034" fg:w="37"/><text x="88.4164%" y="190.50"></text></g><g><title>feed (xml/etree/ElementTree.py:1284) (37 samples, 1.60%)</title><rect x="88.1664%" y="196" width="1.6038%" height="15" fill="rgb(220,39,43)" fg:x="2034" fg:w="37"/><text x="88.4164%" y="206.50"></text></g><g><title>read_string_table (openpyxl/reader/strings.py:17) (3 samples, 0.13%)</title><rect x="89.7703%" y="164" width="0.1300%" height="15" fill="rgb(229,68,48)" fg:x="2071" fg:w="3"/><text x="90.0203%" y="174.50"></text></g><g><title>content (openpyxl/cell/text.py:179) (3 samples, 0.13%)</title><rect x="90.0737%" y="180" width="0.1300%" height="15" fill="rgb(252,8,32)" fg:x="2078" fg:w="3"/><text x="90.3237%" y="190.50"></text></g><g><title>content (openpyxl/cell/text.py:180) (4 samples, 0.17%)</title><rect x="90.2037%" y="180" width="0.1734%" height="15" fill="rgb(223,20,43)" fg:x="2081" fg:w="4"/><text x="90.4537%" y="190.50"></text></g><g><title>content (openpyxl/cell/text.py:181) (5 samples, 0.22%)</title><rect x="90.3771%" y="180" width="0.2167%" height="15" fill="rgb(229,81,49)" fg:x="2085" fg:w="5"/><text x="90.6271%" y="190.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:167) (12 samples, 0.52%)</title><rect x="90.9840%" y="196" width="0.5202%" height="15" fill="rgb(236,28,36)" fg:x="2099" fg:w="12"/><text x="91.2340%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/nested.py:33) (8 samples, 0.35%)</title><rect x="91.1573%" y="212" width="0.3468%" height="15" fill="rgb(249,185,26)" fg:x="2103" fg:w="8"/><text x="91.4073%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:72) (6 samples, 0.26%)</title><rect x="91.2440%" y="228" width="0.2601%" height="15" fill="rgb(249,174,33)" fg:x="2105" fg:w="6"/><text x="91.4940%" y="238.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:47) (4 samples, 0.17%)</title><rect x="91.3307%" y="244" width="0.1734%" height="15" fill="rgb(233,201,37)" fg:x="2107" fg:w="4"/><text x="91.5807%" y="254.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:25) (3 samples, 0.13%)</title><rect x="91.3741%" y="260" width="0.1300%" height="15" fill="rgb(221,78,26)" fg:x="2108" fg:w="3"/><text x="91.6241%" y="270.50"></text></g><g><title>__set__ (openpyxl/descriptors/sequence.py:27) (8 samples, 0.35%)</title><rect x="91.6342%" y="212" width="0.3468%" height="15" fill="rgb(250,127,30)" fg:x="2114" fg:w="8"/><text x="91.8842%" y="222.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:168) (14 samples, 0.61%)</title><rect x="91.5041%" y="196" width="0.6068%" height="15" fill="rgb(230,49,44)" fg:x="2111" fg:w="14"/><text x="91.7541%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/sequence.py:27) (4 samples, 0.17%)</title><rect x="92.1977%" y="212" width="0.1734%" height="15" fill="rgb(229,67,23)" fg:x="2127" fg:w="4"/><text x="92.4477%" y="222.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:169) (7 samples, 0.30%)</title><rect x="92.1110%" y="196" width="0.3034%" height="15" fill="rgb(249,83,47)" fg:x="2125" fg:w="7"/><text x="92.3610%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:40) (4 samples, 0.17%)</title><rect x="92.4577%" y="212" width="0.1734%" height="15" fill="rgb(215,43,3)" fg:x="2133" fg:w="4"/><text x="92.7077%" y="222.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:103) (49 samples, 2.12%)</title><rect x="90.6372%" y="180" width="2.1240%" height="15" fill="rgb(238,154,13)" fg:x="2091" fg:w="49"/><text x="90.8872%" y="190.50">f..</text></g><g><title>__init__ (openpyxl/cell/text.py:170) (8 samples, 0.35%)</title><rect x="92.4144%" y="196" width="0.3468%" height="15" fill="rgb(219,56,2)" fg:x="2132" fg:w="8"/><text x="92.6644%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:47) (3 samples, 0.13%)</title><rect x="92.6311%" y="212" width="0.1300%" height="15" fill="rgb(233,0,4)" fg:x="2137" fg:w="3"/><text x="92.8811%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:25) (3 samples, 0.13%)</title><rect x="92.6311%" y="228" width="0.1300%" height="15" fill="rgb(235,30,7)" fg:x="2137" fg:w="3"/><text x="92.8811%" y="238.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:73) (3 samples, 0.13%)</title><rect x="93.0212%" y="180" width="0.1300%" height="15" fill="rgb(250,79,13)" fg:x="2146" fg:w="3"/><text x="93.2712%" y="190.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:74) (8 samples, 0.35%)</title><rect x="93.1513%" y="180" width="0.3468%" height="15" fill="rgb(211,146,34)" fg:x="2149" fg:w="8"/><text x="93.4013%" y="190.50"></text></g><g><title>localname (openpyxl/xml/functions.py:80) (8 samples, 0.35%)</title><rect x="93.1513%" y="196" width="0.3468%" height="15" fill="rgb(228,22,38)" fg:x="2149" fg:w="8"/><text x="93.4013%" y="206.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:81) (4 samples, 0.17%)</title><rect x="93.5847%" y="180" width="0.1734%" height="15" fill="rgb(235,168,5)" fg:x="2159" fg:w="4"/><text x="93.8347%" y="190.50"></text></g><g><title>read_string_table (openpyxl/reader/strings.py:18) (93 samples, 4.03%)</title><rect x="89.9003%" y="164" width="4.0312%" height="15" fill="rgb(221,155,16)" fg:x="2074" fg:w="93"/><text x="90.1503%" y="174.50">read..</text></g><g><title>read (openpyxl/reader/excel.py:291) (141 samples, 6.11%)</title><rect x="87.8630%" y="132" width="6.1118%" height="15" fill="rgb(215,215,53)" fg:x="2027" fg:w="141"/><text x="88.1130%" y="142.50">read (op..</text></g><g><title>read_strings (openpyxl/reader/excel.py:147) (141 samples, 6.11%)</title><rect x="87.8630%" y="148" width="6.1118%" height="15" fill="rgb(223,4,10)" fg:x="2027" fg:w="141"/><text x="88.1130%" y="158.50">read_str..</text></g><g><title>verify_cached_values (verify_xlsx_enhanced.py:224) (143 samples, 6.20%)</title><rect x="87.8630%" y="100" width="6.1985%" height="15" fill="rgb(234,103,6)" fg:x="2027" fg:w="143"/><text x="88.1130%" y="110.50">verify_c..</text></g><g><title>load_workbook (openpyxl/reader/excel.py:348) (143 samples, 6.20%)</title><rect x="87.8630%" y="116" width="6.1985%" height="15" fill="rgb(227,97,0)" fg:x="2027" fg:w="143"/><text x="88.1130%" y="126.50">load_wor..</text></g><g><title>main (verify_xlsx_enhanced.py:365) (145 samples, 6.29%)</title><rect x="87.8630%" y="84" width="6.2852%" height="15" fill="rgb(234,150,53)" fg:x="2027" fg:w="145"/><text x="88.1130%" y="94.50">main (ve..</text></g><g><title>iterator (xml/etree/ElementTree.py:1236) (4 samples, 0.17%)</title><rect x="94.3216%" y="180" width="0.1734%" height="15" fill="rgb(228,201,54)" fg:x="2176" fg:w="4"/><text x="94.5716%" y="190.50"></text></g><g><title>iterator (xml/etree/ElementTree.py:1238) (3 samples, 0.13%)</title><rect x="94.4950%" y="180" width="0.1300%" height="15" fill="rgb(222,22,37)" fg:x="2180" fg:w="3"/><text x="94.7450%" y="190.50"></text></g><g><title>read (zipfile/__init__.py:1005) (3 samples, 0.13%)</title><rect x="94.4950%" y="196" width="0.1300%" height="15" fill="rgb(237,53,32)" fg:x="2180" fg:w="3"/><text x="94.7450%" y="206.50"></text></g><g><title>read_string_table (openpyxl/reader/strings.py:16) (36 samples, 1.56%)</title><rect x="94.1916%" y="164" width="1.5605%" height="15" fill="rgb(233,25,53)" fg:x="2173" fg:w="36"/><text x="94.4416%" y="174.50"></text></g><g><title>iterator (xml/etree/ElementTree.py:1241) (26 samples, 1.13%)</title><rect x="94.6251%" y="180" width="1.1270%" height="15" fill="rgb(210,40,34)" fg:x="2183" fg:w="26"/><text x="94.8751%" y="190.50"></text></g><g><title>feed (xml/etree/ElementTree.py:1284) (26 samples, 1.13%)</title><rect x="94.6251%" y="196" width="1.1270%" height="15" fill="rgb(241,220,44)" fg:x="2183" fg:w="26"/><text x="94.8751%" y="206.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:167) (10 samples, 0.43%)</title><rect x="96.4456%" y="196" width="0.4335%" height="15" fill="rgb(235,28,35)" fg:x="2225" fg:w="10"/><text x="96.6956%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/nested.py:33) (8 samples, 0.35%)</title><rect x="96.5323%" y="212" width="0.3468%" height="15" fill="rgb(210,56,17)" fg:x="2227" fg:w="8"/><text x="96.7823%" y="222.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:72) (3 samples, 0.13%)</title><rect x="96.7490%" y="228" width="0.1300%" height="15" fill="rgb(224,130,29)" fg:x="2232" fg:w="3"/><text x="96.9990%" y="238.50"></text></g><g><title>__set__ (openpyxl/descriptors/sequence.py:27) (11 samples, 0.48%)</title><rect x="97.0524%" y="212" width="0.4768%" height="15" fill="rgb(235,212,8)" fg:x="2239" fg:w="11"/><text x="97.3024%" y="222.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:168) (17 samples, 0.74%)</title><rect x="96.8791%" y="196" width="0.7369%" height="15" fill="rgb(223,33,50)" fg:x="2235" fg:w="17"/><text x="97.1291%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/sequence.py:27) (9 samples, 0.39%)</title><rect x="97.6593%" y="212" width="0.3901%" height="15" fill="rgb(219,149,13)" fg:x="2253" fg:w="9"/><text x="97.9093%" y="222.50"></text></g><g><title>__init__ (openpyxl/cell/text.py:169) (11 samples, 0.48%)</title><rect x="97.6160%" y="196" width="0.4768%" height="15" fill="rgb(250,156,29)" fg:x="2252" fg:w="11"/><text x="97.8660%" y="206.50"></text></g><g><title>__set__ (openpyxl/descriptors/base.py:40) (5 samples, 0.22%)</title><rect x="98.2228%" y="212" width="0.2167%" height="15" fill="rgb(216,193,19)" fg:x="2266" fg:w="5"/><text x="98.4728%" y="222.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:103) (50 samples, 2.17%)</title><rect x="96.3589%" y="180" width="2.1673%" height="15" fill="rgb(216,135,14)" fg:x="2223" fg:w="50"/><text x="96.6089%" y="190.50">f..</text></g><g><title>__init__ (openpyxl/cell/text.py:170) (10 samples, 0.43%)</title><rect x="98.0928%" y="196" width="0.4335%" height="15" fill="rgb(241,47,5)" fg:x="2263" fg:w="10"/><text x="98.3428%" y="206.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:52) (4 samples, 0.17%)</title><rect x="98.5696%" y="180" width="0.1734%" height="15" fill="rgb(233,42,35)" fg:x="2274" fg:w="4"/><text x="98.8196%" y="190.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:73) (5 samples, 0.22%)</title><rect x="98.8730%" y="180" width="0.2167%" height="15" fill="rgb(231,13,6)" fg:x="2281" fg:w="5"/><text x="99.1230%" y="190.50"></text></g><g><title>localname (openpyxl/xml/functions.py:80) (5 samples, 0.22%)</title><rect x="99.1764%" y="196" width="0.2167%" height="15" fill="rgb(207,181,40)" fg:x="2288" fg:w="5"/><text x="99.4264%" y="206.50"></text></g><g><title>from_tree (openpyxl/descriptors/serialisable.py:74) (10 samples, 0.43%)</title><rect x="99.0897%" y="180" width="0.4335%" height="15" fill="rgb(254,173,49)" fg:x="2286" fg:w="10"/><text x="99.3397%" y="190.50"></text></g><g><title>localname (openpyxl/xml/functions.py:81) (3 samples, 0.13%)</title><rect x="99.3932%" y="196" width="0.1300%" height="15" fill="rgb(221,1,38)" fg:x="2293" fg:w="3"/><text x="99.6432%" y="206.50"></text></g><g><title>read_string_table (openpyxl/reader/strings.py:18) (90 samples, 3.90%)</title><rect x="95.7954%" y="164" width="3.9012%" height="15" fill="rgb(206,124,46)" fg:x="2210" fg:w="90"/><text x="96.0454%" y="174.50">read..</text></g><g><title>verify_csv_deliverables (verify_xlsx_enhanced.py:316) (130 samples, 5.64%)</title><rect x="94.1482%" y="100" width="5.6350%" height="15" fill="rgb(249,21,11)" fg:x="2172" fg:w="130"/><text x="94.3982%" y="110.50">verify_..</text></g><g><title>load_workbook (openpyxl/reader/excel.py:348) (130 samples, 5.64%)</title><rect x="94.1482%" y="116" width="5.6350%" height="15" fill="rgb(222,201,40)" fg:x="2172" fg:w="130"/><text x="94.3982%" y="126.50">load_wo..</text></g><g><title>read (openpyxl/reader/excel.py:291) (130 samples, 5.64%)</title><rect x="94.1482%" y="132" width="5.6350%" height="15" fill="rgb(235,61,29)" fg:x="2172" fg:w="130"/><text x="94.3982%" y="142.50">read (o..</text></g><g><title>read_strings (openpyxl/reader/excel.py:147) (130 samples, 5.64%)</title><rect x="94.1482%" y="148" width="5.6350%" height="15" fill="rgb(219,207,3)" fg:x="2172" fg:w="130"/><text x="94.3982%" y="158.50">read_st..</text></g><g><title>&lt;module&gt; (verify_xlsx_enhanced.py:388) (2,295 samples, 99.48%)</title><rect x="0.4335%" y="68" width="99.4798%" height="15" fill="rgb(222,56,46)" fg:x="10" fg:w="2295"/><text x="0.6835%" y="78.50">&lt;module&gt; (verify_xlsx_enhanced.py:388)</text></g><g><title>main (verify_xlsx_enhanced.py:367) (133 samples, 5.77%)</title><rect x="94.1482%" y="84" width="5.7651%" height="15" fill="rgb(239,76,54)" fg:x="2172" fg:w="133"/><text x="94.3982%" y="94.50">main (v..</text></g><g><title>verify_csv_deliverables (verify_xlsx_enhanced.py:322) (3 samples, 0.13%)</title><rect x="99.7833%" y="100" width="0.1300%" height="15" fill="rgb(231,124,27)" fg:x="2302" fg:w="3"/><text x="100.0333%" y="110.50"></text></g><g><title>cell (openpyxl/worksheet/worksheet.py:244) (3 samples, 0.13%)</title><rect x="99.7833%" y="116" width="0.1300%" height="15" fill="rgb(249,195,6)" fg:x="2302" fg:w="3"/><text x="100.0333%" y="126.50"></text></g><g><title>_get_cell (openpyxl/worksheet/_read_only.py:132) (3 samples, 0.13%)</title><rect x="99.7833%" y="132" width="0.1300%" height="15" fill="rgb(237,174,47)" fg:x="2302" fg:w="3"/><text x="100.0333%" y="142.50"></text></g><g><title>_cells_by_row (openpyxl/worksheet/_read_only.py:85) (3 samples, 0.13%)</title><rect x="99.7833%" y="148" width="0.1300%" height="15" fill="rgb(206,201,31)" fg:x="2302" fg:w="3"/><text x="100.0333%" y="158.50"></text></g><g><title>all (2,307 samples, 100%)</title><rect x="0.0000%" y="52" width="100.0000%" height="15" fill="rgb(231,57,52)" fg:x="0" fg:w="2307"/><text x="0.2500%" y="62.50"></text></g></svg></svg>
