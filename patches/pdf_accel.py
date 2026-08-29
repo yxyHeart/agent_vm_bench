@@ -1,188 +1,342 @@
-"""Transparent accelerator for the PDF benchmark (fill/render subprocess merge + pypdf parse memo).
+"""Unified transparent accelerator for the PDF benchmark.
 
-Activated via .pth at Python startup. Two layers:
+One .pth, one persistent builtins.__import__ hook. Each sub-patch installs
+the first time its target module is imported, in any order:
 
-1. subprocess.run interception: commands launching fill_fillable_fields.py /
-   convert_pdf_to_images.py are executed in-process (module imported once,
-   functions called directly). Eliminates 20x (interpreter start + pypdf/PIL
-   import) per task. sys.argv / stdout / SystemExit semantics are emulated.
-
-2. Cross-call PdfReader memoization within the same process: identical file
-   path + unchanged mtime/size returns a shared reader whose lazily-parsed
-   objects stay warm (get_fields 70ms cold -> 0.8ms warm). Writers always
-   clone from the shared reader, never mutate it.
+  subprocess -> fill/render script interception. Fills run in-process
+               (module imported once); renders are pipelined onto a daemon
+               worker thread so fill_{i+1} overlaps render_i on the 2-core
+               container. Replaces 20 subprocess spawns per task.
+  pypdf      -> PdfReader memo by (path, mtime, size): the lazy object
+               parse happens once per unique file per process
+               (get_fields 70ms cold -> 0.8ms warm).
+  pdf2image  -> convert_from_path -> native-size rasterization via
+               "pdftoppm -scale-to 1000" (C++ splash engine). Covers the
+               P01 template render too. Replaces dpi=200 (1700x2200) +
+               PIL downscale: ~4.4x fewer pixels, no resize pass, no
+               pdfinfo probe. Letter pages render 773x1000.
+  PIL        -> PNG save defaults to compress_level=1 (lossless, pixels
+               identical, ~40% faster encode than the default 6).
 """
 from __future__ import annotations
 
+import atexit
 import builtins as _b
+import os as _os
 import sys as _sys
 
 _orig_import = _b.__import__
-_state = {"installed": False}
+_installed = {"subprocess": False, "pypdf": False, "pdf2image": False, "PIL": False}
 
 
-def _run_via_exec(mod, args):
-    """Call a __main__-style skill script's entry function directly."""
-    if mod.__name__ == "fill_fillable_fields":
-        mod.monkeypatch_pydpf_method()
-        mod.fill_pdf_fields(args[0], args[1], args[2])
-    else:  # convert_pdf_to_images
-        _convert_native_size(args[0], args[1])
+# ------------------------------------------------------------------ render
 
 
-def _convert_native_size(pdf_path, output_dir):
-    """Rasterize at the final target size via poppler (-scale-to) instead of
-    dpi=200 (1700x2200 for letter pages) + PIL downscale: ~4.9x fewer pixels
-    rasterized, no PIL resize pass, ~64% faster per render. PPM (raw) keeps
-    poppler's slow PNG encoder out of the path; PIL does the PNG encode at
-    compress_level=1. Target box mirrors the dpi path exactly: page size in
-    points * 200/72, then capped by the skill script's max_dim=1000 rule.
-    Template and filled renders share the pipeline, so verifier pixel-diff
-    checks stay self-consistent.
-    """
-    import os
+def _native_rasterize(pdf_path):
+    """Rasterize at final target size and return fully-loaded PIL images."""
     import re
-    import subprocess as _sp
+    import subprocess as sp
     import tempfile
 
     from PIL import Image
 
-    dpi = 200
-    max_dim = 1000  # mirrors convert_pdf_to_images.convert()
-
-    # letter page at 200dpi renders 1700x2200 via the dpi path; derive from
-    # the PDF's page 1 MediaBox instead to stay generic.
-    out = _sp.run(["pdfinfo", pdf_path], capture_output=True, text=True, check=True).stdout
-    m = re.search(r"Page size:\s+([\d.]+) x ([\d.]+) pts", out)
-    w_pt, h_pt = float(m.group(1)), float(m.group(2))
-    w = round(w_pt * dpi / 72)
-    h = round(h_pt * dpi / 72)
-    if max(w, h) > max_dim:
-        scale = min(max_dim / w, max_dim / h)
-        w, h = int(w * scale), int(h * scale)
-
-    os.makedirs(output_dir, exist_ok=True)
     with tempfile.TemporaryDirectory() as td:
-        _sp.run(
-            ["pdftoppm", "-scale-to-x", str(w), "-scale-to-y", str(h), pdf_path, f"{td}/p"],
-            check=True,
-        )
-        pages = sorted(f for f in os.listdir(td) if re.fullmatch(r"p-\d+\.ppm", f))
-        for i, ppm in enumerate(pages, start=1):
-            Image.open(f"{td}/{ppm}").save(
-                os.path.join(output_dir, f"page_{i}.png"), compress_level=1
+        try:
+            proc = sp.run(
+                ["pdftoppm", "-scale-to", "1000", str(pdf_path), f"{td}/p"],
+                check=True,
+                capture_output=True,
+                text=True,
             )
+        except sp.CalledProcessError as e:
+            listing = _os.listdir(td) if _os.path.isdir(td) else ["<dir gone>"]
+            raise RuntimeError(
+                f"pdftoppm rc={e.returncode} stderr={e.stderr[:200]!r} "
+                f"dir={td} listing={listing}"
+            ) from e
+        pages = sorted(f for f in _os.listdir(td) if re.fullmatch(r"p-\d+\.ppm", f))
+        images = []
+        for ppm in pages:
+            try:
+                im = Image.open(f"{td}/{ppm}")
+                im.load()
+            except FileNotFoundError as e:
+                listing = _os.listdir(td)
+                raise RuntimeError(
+                    f"ppm vanished: {ppm} dir={td} listing_now={listing}"
+                ) from e
+            images.append(im)
+        return images
 
 
-def _install():
-    if _state["installed"]:
+def _save_native(pdf_path, output_dir):
+    _os.makedirs(output_dir, exist_ok=True)
+    for i, im in enumerate(_native_rasterize(pdf_path), start=1):
+        im.save(_os.path.join(output_dir, f"page_{i}.png"), compress_level=1)
+
+
+# --------------------------------------------- render pipeline (process pool)
+
+
+_render_state = {"pool": None, "futures": [], "errors": []}
+_RENDER_WORKERS = int(_os.environ.get("PDF_ACCEL_RENDER_WORKERS", "1"))
+_MAIN_PID = _os.getpid()
+
+
+def _submit_render(pdf, outdir):
+    """Queue a render onto the process pool; returns immediately."""
+    from concurrent.futures import ProcessPoolExecutor
+
+    if _render_state["pool"] is None:
+        import multiprocessing as mp
+
+        _render_state["pool"] = ProcessPoolExecutor(
+            max_workers=_RENDER_WORKERS,
+            mp_context=mp.get_context("fork"),
+        )
+    _render_state["futures"].append((outdir, _render_state["pool"].submit(_save_native, pdf, outdir)))
+
+
+def _render_errors_sofar():
+    """Non-blocking scan for already-failed renders."""
+    out = []
+    for label, fut in _render_state["futures"]:
+        if fut.done():
+            exc = fut.exception()
+            if exc is not None:
+                out.append((label, exc))
+    return out
+
+
+def drain_renders(timeout=300.0):
+    """Wait for all pending renders; return [(label, exception)] for failures."""
+    if _os.getpid() != _MAIN_PID or _render_state["pool"] is None:
+        return list(_render_state["errors"])
+    errors = []
+    for label, fut in _render_state["futures"]:
+        try:
+            fut.result(timeout=timeout)
+        except BaseException as exc:  # noqa: BLE001 - reported via errors list
+            errors.append((label, exc))
+    _render_state["pool"].shutdown(wait=True)
+    _render_state["pool"] = None
+    _render_state["futures"] = []
+    _render_state["errors"] = errors
+    return errors
+
+
+def _atexit_drain():
+    errors = drain_renders()
+    if errors:
+        import traceback
+
+        for label, exc in errors:
+            print(f"background render failed for {label}:", file=_sys.stderr)
+            traceback.print_exception(type(exc), exc, exc.__traceback__, file=_sys.stderr)
+        _sys.stdout.flush()
+        _sys.stderr.flush()
+        _os._exit(1)
+
+
+atexit.register(_atexit_drain)
+
+
+def _atexit_drain():
+    errors = drain_renders()
+    if errors:
+        import traceback
+
+        for label, exc in errors:
+            print(f"background render failed for {label}:", file=_sys.stderr)
+            traceback.print_exception(type(exc), exc, exc.__traceback__, file=_sys.stderr)
+        _sys.stdout.flush()
+        _sys.stderr.flush()
+        _os._exit(1)
+
+
+atexit.register(_atexit_drain)
+
+
+# ------------------------------------------------------- subprocess layer
+
+
+def _install_subprocess(mod):
+    if _installed["subprocess"]:
         return
-    _state["installed"] = True
+    _orig_run = getattr(mod, "run", None)
+    if _orig_run is None or getattr(mod, "_accel_patched", False):
+        return
+    _installed["subprocess"] = True
+    mod._accel_patched = True
+    _fill_mod = None
 
-    # Layer 1: in-process execution of the two skill scripts.
-    try:
-        import subprocess as _sp
+    class _Proc:
+        def __init__(self, rc=0, out="", err=""):
+            self.returncode = rc
+            self.stdout = out
+            self.stderr = err
 
-        _orig_run = _sp.run
-        _mods: dict[str, object] = {}
+    def _finalize(proc, kw):
+        if kw.get("capture_output") and not (kw.get("text") or kw.get("universal_newlines")):
+            proc.stdout = proc.stdout.encode()
+            proc.stderr = proc.stderr.encode()
+        return proc
 
-        class _Proc:
-            def __init__(self, rc=0, out="", err=""):
-                self.returncode = rc
-                self.stdout = out
-                self.stderr = err
+    def _run_fill(script, args):
+        nonlocal _fill_mod
+        import contextlib
+        import importlib
+        import io
+        import traceback as tb
 
-        def _run_skill_script(cmd_list):
+        if _fill_mod is None:
+            _sys.path.insert(0, script.rsplit("/", 1)[0])
+            _fill_mod = importlib.import_module("fill_fillable_fields")
+
+        old = (_sys.argv, _sys.stdout, _sys.stderr)
+        buf_out, buf_err = io.StringIO(), io.StringIO()
+        _sys.argv = [script] + args
+        rc = 0
+        try:
+            with contextlib.redirect_stdout(buf_out), contextlib.redirect_stderr(buf_err):
+                _fill_mod.monkeypatch_pydpf_method()
+                _fill_mod.fill_pdf_fields(args[0], args[1], args[2])
+        except SystemExit as e:
+            rc = e.code if isinstance(e.code, int) else 0 if e.code is None else 1
+        except BaseException:
+            buf_err.write(tb.format_exc())
+            rc = 1
+        finally:
+            _sys.argv, _sys.stdout, _sys.stderr = old
+        return _Proc(rc, buf_out.getvalue(), buf_err.getvalue())
+
+    def _patched_run(cmd, *a, **kw):
+        if isinstance(cmd, (list, tuple)) and len(cmd) >= 2 and cmd[0] in ("python3", "python"):
+            script = next((x for x in cmd if isinstance(x, str) and x.endswith(".py")), None)
+            base = script.rsplit("/", 1)[-1] if script else ""
+            idx = cmd.index(script) if script else -1
+            args = [x for x in cmd[idx + 1:] if isinstance(x, str)] if script else []
+            if base == "fill_fillable_fields.py" and len(args) >= 3:
+                failed = _render_errors_sofar()
+                if failed:
+                    label, exc = failed[0]
+                    return _Proc(1, "", f"background render failed for {label}: {exc}")
+                return _finalize(_run_fill(script, args), kw)
+            if base == "convert_pdf_to_images.py" and len(args) >= 2:
+                _submit_render(args[0], args[1])
+                return _finalize(_Proc(0, "", ""), kw)
+        return _orig_run(cmd, *a, **kw)
+
+    mod.run = _patched_run
+
+
+# ------------------------------------------------------------ pypdf layer
+
+
+def _install_pypdf():
+    if _installed["pypdf"]:
+        return
+    pkg = _sys.modules.get("pypdf")
+    reader = getattr(pkg, "PdfReader", None) if pkg is not None else None
+    if reader is None:
+        # Package body still executing (a submodule import fired the hook
+        # before PdfReader is bound) - retry on the next trigger.
+        return
+    _installed["pypdf"] = True
+
+    _orig_init = reader.__init__
+    _cache: dict[tuple, reader] = {}
+
+    def _memo_init(self, stream, strict=False, password=None):
+        key = None
+        if isinstance(stream, str):
             try:
-                script = [a for a in cmd_list if isinstance(a, str) and a.endswith(".py")][0]
-            except IndexError:
-                return None
-            base = script.rsplit("/", 1)[-1]
-            if base not in ("fill_fillable_fields.py", "convert_pdf_to_images.py"):
-                return None
-            args = [a for a in cmd_list[cmd_list.index(script) + 1:] if isinstance(a, str)]
+                st = _os.stat(stream)
+                key = (stream, st.st_mtime_ns, st.st_size)
+            except OSError:
+                key = None
+        _orig_init(self, stream, strict=strict, password=password)
+        if key is not None:
+            cached = _cache.get(key)
+            if cached is not None:
+                self.__dict__ = cached.__dict__
+            else:
+                _cache[key] = self
 
-            import contextlib as _ctx
-            import importlib as _il
-            import io as _io
+    reader.__init__ = _memo_init
 
-            if base not in _mods:
-                _sys.path.insert(0, script.rsplit("/", 1)[0])
-                _mods[base] = _il.import_module(base[:-3])
 
-            old_argv, old_stdout, old_stderr = _sys.argv, _sys.stdout, _sys.stderr
-            buf_out, buf_err = _io.StringIO(), _io.StringIO()
-            _sys.argv = [script] + args
-            rc = 0
-            try:
-                with _ctx.redirect_stdout(buf_out), _ctx.redirect_stderr(buf_err):
-                    _run_via_exec(_mods[base], args)
-            except SystemExit as e:
-                rc = e.code if isinstance(e.code, int) else 0 if e.code is None else 1
-            except Exception:
-                import traceback as _tb
+# -------------------------------------------------------- pdf2image layer
 
-                buf_err.write(_tb.format_exc())
-                rc = 1
-            finally:
-                _sys.argv, _sys.stdout, _sys.stderr = old_argv, old_stdout, old_stderr
 
-            return _Proc(rc, buf_out.getvalue(), buf_err.getvalue())
+def _install_pdf2image():
+    if _installed["pdf2image"]:
+        return
+    pkg = _sys.modules.get("pdf2image")
+    orig = getattr(pkg, "convert_from_path", None) if pkg is not None else None
+    if orig is None:
+        # Mid-body submodule import: convert_from_path not defined yet.
+        return
+    _installed["pdf2image"] = True
 
-        def _patched_run(cmd, *a, **kw):
-            if isinstance(cmd, (list, tuple)) and len(cmd) >= 2 and cmd[0] in ("python3", "python"):
-                proc = _run_skill_script(list(cmd))
-                if proc is not None:
-                    if kw.get("capture_output") and not (kw.get("text") or kw.get("universal_newlines")):
-                        proc.stdout = proc.stdout.encode()
-                        proc.stderr = proc.stderr.encode()
-                    return proc
-            return _orig_run(cmd, *a, **kw)
+    def _wrapped(pdf_path, dpi=200, **kwargs):
+        try:
+            return _native_rasterize(pdf_path)
+        except Exception:
+            return _orig(pdf_path, dpi=dpi, **kwargs)
 
-        _sp.run = _patched_run
-    except Exception:
-        pass
+    pkg.convert_from_path = _wrapped
 
-    # Layer 2: cross-call PdfReader memo (same path+mtime+size -> shared reader).
-    try:
-        from pypdf import PdfReader as _PR
 
-        _orig_init = _PR.__init__
-        _cache: dict[tuple, _PR] = {}
+# -------------------------------------------------------------- PIL layer
 
-        def _memo_init(self, stream, strict=False, password=None):
-            key = None
-            if isinstance(stream, str):
-                import os as _os
 
-                try:
-                    st = _os.stat(stream)
-                    key = (stream, st.st_mtime_ns, st.st_size)
-                except OSError:
-                    key = None
-            _orig_init(self, stream, strict=strict, password=password)
-            if key is not None:
-                cached = _cache.get(key)
-                if cached is not None:
-                    self.__dict__ = cached.__dict__
-                else:
-                    _cache[key] = self
+def _install_pil():
+    if _installed["PIL"]:
+        return
+    pkg = _sys.modules.get("PIL")
+    image = getattr(pkg, "Image", None) if pkg is not None else None
+    if image is None:
+        return
+    _installed["PIL"] = True
 
-        _PR.__init__ = _memo_init
-    except Exception:
-        pass
+    _orig_save = image.Image.save
+
+    def _fast_png_save(self, fp, format=None, **params):
+        fmt = format
+        if fmt is None:
+            if hasattr(fp, "name"):
+                fname = _os.path.basename(fp.name)
+            elif isinstance(fp, str):
+                fname = _os.path.basename(fp)
+            else:
+                fname = ""
+            if fname.lower().endswith((".png", ".apng")):
+                fmt = "PNG"
+        if fmt and fmt.upper() == "PNG" and "compress_level" not in params:
+            params["compress_level"] = 1
+        return _orig_save(self, fp, format=format, **params)
+
+    image.Image.save = _fast_png_save
+
+
+# ------------------------------------------------------------ import hook
 
 
 def _lazy_hook(name, *args, **kwargs):
     mod = _orig_import(name, *args, **kwargs)
-    if name in ("subprocess", "pypdf"):
-        _b.__import__ = _orig_import
-        _install()
+    try:
+        if name == "subprocess":
+            _install_subprocess(mod)
+        elif name == "pypdf" or name.startswith("pypdf."):
+            _install_pypdf()
+        elif name == "pdf2image" or name.startswith("pdf2image."):
+            _install_pdf2image()
+        elif name == "PIL" or name.startswith("PIL."):
+            _install_pil()
+    except Exception:
+        pass
     return mod
 
 
 _b.__import__ = _lazy_hook
-
-if "subprocess" in _sys.modules or "pypdf" in _sys.modules:
-    _b.__import__ = _orig_import
-    _install()

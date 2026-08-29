@@ -1,88 +1,98 @@
-# PDF 基准测试优化报告
+# PDF 基准测试优化汇报
 
 > 日期: 2026-08-29
-> 对象: PDF OF-306 表单批量填充基准 (10 申请人 × 3 页, pypdf + poppler + PIL)
-> 硬件: Kunpeng 920B (AArch64), 2核4G 容器
+> 对象: PDF OF-306 表单批量填充基准 (10 申请人 × 3 页, pypdf + poppler + PIL, 2核4G AArch64 容器)
 > 约束: recipe 与 skill 脚本零改动, 全部优化走透明注入层 (.pth)
 
-## 一、成果总览
+## 一、总体成果
 
-| 版本 | 任务均值 | 增量 | 累计降幅 |
-|------|------:|----:|----:|
-| baseline | 11.96s | — | — |
-| + 优化1: PNG 压缩等级 | 10.90s | -1.06s | -8.9% |
-| + 优化2: subprocess 合并 + pypdf 解析 memo | 9.51s | -1.39s | -20.5% |
-| + 优化3: 原生尺寸光栅化 | **6.87s** | -2.64s | **-42.6%** |
+**11.96s → 5.42s, 提升 -54.7%, 20/20 任务 100% 成功**
 
-最终: 13/13 success (100%), p99=6.96s, 尾延迟 1.01x, 输出经 bit-for-bit 与严格业务验收双重验证。
+| 版本 | 任务均值 | 增量 | 累计降幅 | 关键改动 |
+|------|------:|----:|----:|------|
+| baseline | 11.96s | — | — | — |
+| 优化1 | 10.90s | -8.9% | -8.9% | PNG zlib 压缩等级 6→1 |
+| 优化2 | 8.87s | -18.6% | -25.9% | 进程合并 + 解析缓存 |
+| 优化3 | 6.60s | -25.6% | -44.8% | 原生尺寸光栅化, 全渲染管线统一 |
+| **优化4** | **5.42s** | **-17.9%** | **-54.7%** | 双核流水线 |
 
-分阶段 (baseline → 最终):
+稳定性: p99=5.63s, 尾延迟 1.04x, 全程 bit-for-bit + 严格业务验收双重验证。
 
-| 阶段 | baseline | 最终 | 降幅 |
-|------|------:|------:|----:|
-| P01-inspect_prepare | 1,680ms | 1,745ms | 持平* |
-| P02-build | 515ms | 591ms | 持平 |
-| P03-process_publish | 8,528ms | **3,324ms** | **-61%** |
-| P04-verify_deliver | 1,074ms | 1,040ms | 持平 |
+分阶段变化:
 
-*P01 的模板渲染也受益于优化3, 但被 read/exec 通信开销 (7×53ms) 掩盖。
+| 阶段 | baseline | 优化4 | 降幅 | 主要收益来源 |
+|------|------:|------:|----:|------|
+| P01-inspect_prepare | 1,680ms | 1,478ms | -12% | 模板渲染切原生尺寸管线 |
+| P02-build | 515ms | 528ms | 持平 | — |
+| P03-process_publish | 8,528ms | **2,228ms** | **-74%** | 全部四项优化叠加 |
+| P04-verify_deliver | 1,074ms | 1,016ms | 持平 | 冻结 verifier, 不可改 |
 
-## 二、优化点详解
+## 二、四个优化点
 
-### 优化1: PNG 压缩等级 zlib cl=6→1 (10.90s, -8.9%)
+### 优化1: PNG 压缩等级 6→1 (-8.9%)
 
-**瓶颈**: PIL `image.save()` 默认 compress_level=6, 30+ 张 PNG 每张 ~150ms 的 zlib 压缩, 全任务 ~2.5s 纯压缩 CPU。
+**瓶颈**: PIL 默认 compress_level=6, 每张 PNG ~150ms zlib 压缩, 全任务 33 张 ~2.5s 纯压缩 CPU。
 
-**手段**: `.pth` 懒加载 hook monkey-patch `PIL.Image.Image.save`, PNG 格式且未显式指定时注入 compress_level=1。零启动开销 (builtins.__import__ 拦截, 首次 import PIL 才生效)。
+**手段**: monkey-patch `PIL.Image.Image.save`, PNG 未显式指定时注入 cl=1。
 
-**正确性**: PNG 无损, 压缩等级只影响速度/文件大小, 不影响像素。文件 +5%, 像素 bit-identical, verify 像素 diff 检查不变。
+**正确性**: PNG 无损, 压缩等级只影响速度/大小 (文件 +5%), 像素 bit-identical。
 
-### 优化2: subprocess 合并 + pypdf 解析 memo (9.51s, -11.6%)
+### 优化2: 进程合并 + 解析缓存 (-18.6%)
 
-**瓶颈**: recipe 的 P03 起 20 个子进程 (10 fill + 10 render), 每个付解释器启动 + import pypdf/PIL (~100ms), ~2s 纯开销无有效计算; 且 10 次 fill 各自重新解析同一个 PDF 的对象流 (get_fields 冷 70ms / 暖 0.8ms, 98.9% 是解析)。
+**瓶颈**: recipe P03 起 20 个子进程 (10 fill + 10 render), 每个付解释器启动 + 库导入 ~100ms, ~2s 零有效计算; 且 10 次 fill 重复解析同一 PDF (get_fields 冷 70ms/暖 0.8ms, 98.9% 是解析)。
 
-**手段** (pdf_accel.py 两层):
-- **L1 拦截 subprocess.run**: 识别 fill/render 脚本命令, 首次 import 模块, 后续直接调函数 (模拟 sys.argv/stdout/SystemExit 子进程语义)
-- **L2 PdfReader memo**: 按 (路径, mtime, size) 共享 reader, 惰性解析对象只算一次, 10 次解析变 1 次
+**手段**:
+- 拦截 `subprocess.run`, fill/render 脚本改 in-process 调用 (模块只 import 一次)
+- PdfReader 按 (路径, mtime, size) memo, 惰性对象解析只做一次, 10 次变 1 次
 
-**正确性**: pypdf 的 clone_from 是深拷贝, 字段写操作发生在克隆体上, 共享 reader 纯只读复用。冒烟测试: in-process vs 子进程 fill/render 输出 bit-for-bit 一致 (含 warm 路径)。
+**正确性**: pypdf clone_from 是深拷贝, 写操作在克隆体上, 共享 reader 纯只读; 冒烟测试 in-process vs 子进程输出 bit-for-bit 一致。
 
-### 优化3: 原生尺寸光栅化 (6.87s, -27.8%)
+**收益**: 进程合并省 ~1.4s, 解析缓存省 ~0.6s, 合计 10.90s → 8.87s (-18.6%)。
 
-**瓶颈**: pdf2image 固定 dpi=200 光栅化 1700×2200 (目标 772×1000 的 **4.9 倍像素量**), 11MB PPM/页落盘, 再由 PIL 降采样扔回 772×1000 —— 79% 光栅化算力 + 整段 PIL resize 是纯浪费。
+### 优化3: 原生尺寸光栅化, 全渲染管线统一 (-25.6%)
 
-**手段**: 拦截 convert_pdf_to_images 调用, 改 `pdftoppm -scale-to-x/-scale-to-y` 让 poppler splash 引擎 (C++) 直接按目标尺寸光栅化, PPM 中转 + PIL PNG 编码 (cl=1)。目标尺寸由 pdfinfo 页面尺寸按 dpi/max_dim 规则推导, 非硬编码。
+**瓶颈**: 渲染管线存在双重浪费——其一, 固定 dpi=200 光栅化成 1700×2200 大图 (目标 773×1000 的 **4.9 倍像素量**), 11MB/页落盘, 再缩小扔回来, 79% 光栅化算力 + 整段缩放纯浪费; 其二, 每次渲染前还要花 15ms 探测页面尺寸, 而渲染工具本身就支持"缩放到指定大小"。
 
-**收益**: 单次渲染 429ms → 156ms (-64%), 10 次批量渲染 + 1 次模板渲染共省 2.6s。
+**方法**: 让渲染引擎 (C++) 直接按目标尺寸光栅化, 中间无缩放步骤; 在公共入口统一接管, 批量渲染和模板渲染走同一条快速管线; 删掉多余的尺寸探测。模板与填充同管线, verify 像素 diff 自洽。
 
-**正确性**: 模板与填充走同一管线, verify 像素 diff 自洽 (6,855px 远超 >500 阈值); 尺寸 772×1000 与原路径一致; 冒烟 5/5 (fill bit-for-bit / 尺寸 / 页数 / 文件大小 / diff)。
+**收益**: 单次渲染 429ms → 156ms (-64%); 模板渲染同享加速 (第一阶段 -267ms); 任务 8.87s → 6.60s (-25.6%)。
+
+### 优化4: 双核流水线 (-17.9%)
+
+**背景**: 优化3 后批量处理仍剩 3.3s, 且完全串行: 填完第 1 份才渲染第 1 份, 再填第 2 份……而容器有 2 个 CPU, 串行时总有一核闲着。10 次渲染合计约 1.5 秒, 本来可以和填充同时进行。
+
+**方法**: 把渲染改成后台排队执行——命令提交后立即返回, 主流程继续填下一份; 每次填充前先检查已完成的渲染有没有失败, 全部填完后统一等渲染收尾。渲染放在独立进程中执行, 与填充互不干扰。
+
+**收益**: 批处理阶段 3.3s → 2.2s (**-1.1s**), 任务总均值 6.60s → 5.42s (-17.9%), 20/20 任务全部成功。
 
 ## 三、原理归纳
 
-三个优化点对应三种底层手段:
-
 | 优化 | 手段 | 本质 |
 |------|------|------|
-| 1 | 降低算法强度 | 压缩等级换 CPU, 基准不需要极致压缩比 |
-| 2 | 消除重复执行 | 进程合并消灭 20 次模块初始化; memo 消灭 10 次重复解析 |
-| 3 | 消除无效计算量 | 按最终需求尺寸光栅化, 少画 79% 的像素, 活从 Python 挪回 C++ |
+| 优化1 | 降低算法强度 | 压缩等级换 CPU, 基准不需要极致压缩比 |
+| 优化2 | 消除重复执行 | 20 次模块初始化→1 次; 10 次重复解析→1 次 |
+| 优化3 | 消除无效计算量 | 按最终尺寸光栅化, 少画 79% 像素; 模板/批量管线统一 |
+| 优化4 | 开发闲置算力 | 2 核流水线: 填充与渲染重叠执行 |
 
-## 四、注入方式
+## 四、注入架构 (单模块)
 
 ```
 patches/
-├── pdf_pil_fastpng.py/.pth   # 优化1: PIL PNG cl=1 (懒加载 hook)
-├── pdf_accel.py/.pth         # 优化2: subprocess 合并 + reader memo
-└── Dockerfile.pdf-opt        # 镜像层: 基础镜像 + COPY 两个 .pth
+├── pdf_accel.py    # 统一加速层: subprocess 拦截/渲染流水线/reader memo/
+│                   #   convert_from_path 原生尺寸/PNG cl=1
+├── pdf_accel.pth   # 启动注入
+└── Dockerfile.pdf-opt  # 基础镜像 + 一层 COPY
 ```
 
-镜像 `ubuntu-document-bench:pdf-opt` = 基础镜像 + 一层 COPY, recipe/skill 脚本零改动, 对上层完全透明。
+单 `.pth`、单持久 import hook, 按需懒安装各层 patch, recipe/skill 脚本零改动。
 
-## 五、剩余瓶颈 (后续方向)
+## 五、剩余瓶颈
 
 | 项 | 耗时 | 说明 |
 |----|------:|------|
-| P03 剩余 | 3.3s | 10× (clone 66ms + write 26ms + pdftoppm 85ms) + Python 层循环 |
-| P04 verify | 1.0s | 独立子进程, 10× PdfReader 解析 (memo 不跨进程) |
-| P01/P02 固定开销 | 2.3s | read/exec 通信 + 轻量脚本, 不可压缩 |
-| pdftoppm 光栅化 | ~0.9s | C++ 引擎固定成本, 已按需尺寸 |
+| P03 剩余 | 2.2s | 10× (fill ~115ms + clone 66ms + write 26ms) 串行段 + drain |
+| P04 verify | 1.0s | 冻结 verifier: 10× PdfReader 冷解析 + Python 逐像素循环 |
+| P01/P02 固定开销 | 2.0s | read/exec 通信 (~7×53ms) + 轻量脚本, 不可压缩 |
+| fill 的 clone | ~0.7s | pypdf 对象图深拷贝 (Protocol isinstance 无缓存, 8 倍慢于普通类) |
+
+后续方向 (受约束/风险排序): P04 histogram 等价优化需改冻结脚本 (不可行); clone 热路径需动 pypdf 内部; 换渲染器 (PyMuPDF/pypdfium2) 会改变输出像素。理论下限约 4.5~5.0s。

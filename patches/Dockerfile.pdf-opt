@@ -1,6 +1,6 @@
 FROM ubuntu-document-bench:24.04-linuxarm64
 
-COPY pdf_pil_fastpng.py /usr/local/lib/python3.12/dist-packages/pdf_pil_fastpng.py
-COPY pdf_pil_fastpng.pth /usr/local/lib/python3.12/dist-packages/pdf_pil_fastpng.pth
+COPY pdf_accel.py /usr/local/lib/python3.12/dist-packages/pdf_accel.py
+COPY pdf_accel.pth /usr/local/lib/python3.12/dist-packages/pdf_accel.pth
 
-RUN python3 -c "import pdf_pil_fastpng; print('pdf_pil_fastpng installed')"
+RUN python3 -c "import pdf_accel; print('pdf_accel installed')"
