@@ -18,7 +18,8 @@ print("[1/5] workbook reset from template")
 svg7 = FLAMES / "step07_P02-01_exec.svg"
 run(
     f"py-spy record -o {svg7} --duration 300 --subprocesses -- "
-    "python3 /opt/document-bench/bin/run_xlsx_helper_atomic.py enhance_workbook.py output/monthly_operations_report.xlsx"
+    "python3 /opt/document-bench/bin/run_xlsx_helper_atomic.py "
+    "enhance_workbook.py output/monthly_operations_report.xlsx"
 )
 print(f"[2/5] step07 redone with --subprocesses: {svg7.stat().st_size:,} bytes")
 

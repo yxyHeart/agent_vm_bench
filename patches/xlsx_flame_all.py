@@ -164,7 +164,11 @@ def main():
     with open(RECIPE) as f:
         recipe = json.load(f)
 
-    subprocess.run(f"mkdir -p /root/.openclaw/workspace/tool-modeling && rm -rf {WS} && cp -a /opt/document-bench/xlsx {WS}", shell=True, check=True)
+    subprocess.run(
+        f"mkdir -p /root/.openclaw/workspace/tool-modeling && rm -rf {WS} && cp -a /opt/document-bench/xlsx {WS}",
+        shell=True,
+        check=True,
+    )
     subprocess.run(f"mkdir -p {WS}/output", shell=True, check=True)
 
     step_num = 0
