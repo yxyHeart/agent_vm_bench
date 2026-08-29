@@ -1,61 +1,86 @@
-"""On-disk cache + interpreter-level fast paths for openpyxl (read_only=False).
+"""Transparent accelerator for openpyxl, injected via .pth into site-packages.
 
-Transparent layer injected via oxlcache.pth (site-packages): every `python3`
-auto-patches openpyxl.load_workbook. Recipe commands unchanged.
+Key idea: the recipe's workbook has one huge sheet (Raw_Sample, 100k rows x 25
+cols, 111-123MB of XML, 2.5M cells) that almost every step only touches for
+dimensions/headers. Instead of paying full XML->Element->Cell materialisation
+for it on every load, keep it *lazy*:
 
-Levers (each independently kill-switchable via env for A/B attribution):
-- disk cache (v1): MISS fills a pickled cell-less wb + cell table; HIT skips
-  XML parse and rebuilds the 2.5M Cell objects from the table.
-- GC off (v2): during load/rebuild/extract the heap grows monotonically toward
-  2.5M live objects; periodic cyclic-GC scans over them are pure CPU waste.
-  Env OPENPYXL_CACHE_GC=0 disables.
-- direct-slot Cell construction (v2): Cell.__new__ + slot assignment instead
-  of Cell.__init__, both on cache HIT rebuild and on openpyxl's own parse path
-  (WorksheetReader.bind_cells); StyleArray table entries are shared instead of
-  copied per cell (StyleArray is treated as immutable by openpyxl).
-  Env OPENPYXL_CACHE_FASTBIND=0 disables the parse-path patch.
-- lxml writer (v2, image-level): openpyxl 3.1.5 flips write_cell/xmlfile to
-  lxml at import when lxml is installed (module-level dispatch), while the
-  read path (iterparse) is unconditionally stdlib ElementTree — so installing
-  lxml speeds up saves without touching loads. Env OPENPYXL_LXML=False (stock
-  openpyxl flag) reverts the writer to etree.
-- v2 dropped the save-path cache fill: in recipe v2 no openpyxl load ever
-  reads a freshly saved file (the only openpyxl save, TP-07's enhance output,
-  is immediately rewritten by LibreOffice recalc), so filling on save was
-  wasted CPU on the critical path.
-- optional gc.freeze() after a MISS load (env OPENPYXL_CACHE_FREEZE=1, default
-  off): excludes the loaded object tree from all later GC scans inside the
-  same process (helps long-lived multi-load scripts).
+- load: read the sheet member once as bytes (fast), run a C-speed census; if
+  the sheet is "simple" (dense, plain numbers / inlineStr / shared-string
+  cells, no formulas / error / bool / date-typed cells, no XML entities, no
+  self-closed or attribute-less cells), bind head+tail through the stock
+  parser (views, cols, autofilter, margins, merged cells ... all preserved)
+  and stash the raw bytes + metadata as lazy state.
+- access: max_row/max_column answered from the census; touching any data cell
+  materialises the whole sheet via a byte-level fast path (Cell.__new__
+  direct slot writes, stock-equivalent value conversion incl. date formats),
+  with a guaranteed-correct fallback to the stock parser on any surprise.
+- save: a still-lazy sheet is written by copying its original XML bytes into
+  the new archive (compresslevel=1) instead of re-serialising 2.5M cells.
+- disk cache (v1/v2) remains: MISS fills a small blob (lazy sheets contribute
+  a marker, not 2.5M tuples, whether or not they were materialised in that
+  process), HIT rebuilds in well under a second.
 
-Result (2-core/4G container, fixed single task): v1 259s -> 174.9s (-33%);
-v2 see docs/xlsx-cache-report.md update.
+Env switches (for A/B attribution):
+- OPENPYXL_CACHE=0           disable everything (stock openpyxl)
+- OPENPYXL_LAZYRAW=0         disable lazy big-sheet handling
+- OPENPYXL_PASSTHROUGH=0     disable verbatim save of lazy sheets
+- OPENPYXL_CACHE_FASTBIND=0  disable direct-slot bind for normal sheets
+- OPENPYXL_CACHE_GC=0        disable phase-scoped gc.disable
 """
 from __future__ import annotations
 
 import gc
 import hashlib
-import inspect
 import os
 import pickle
+import re
 import time
 from contextlib import contextmanager
+from io import BytesIO
 from pathlib import Path
+
+_cache_imports = None
+
+
+def _imports():
+    global _cache_imports
+    if _cache_imports is None:
+        from openpyxl.cell import Cell
+        from openpyxl.worksheet._reader import _cast_number
+        from openpyxl.utils.datetime import from_excel
+        from warnings import warn
+        _cache_imports = (Cell, _cast_number, from_excel, warn)
+    return _cache_imports
+
 
 _CACHE_DIR = Path(os.environ.get("OPENPYXL_CACHE_DIR", "/tmp/oxlcache"))
 _ENABLED = os.environ.get("OPENPYXL_CACHE", "1") == "1"
 _FASTBIND = os.environ.get("OPENPYXL_CACHE_FASTBIND", "1") == "1"
 _GC_OFF = os.environ.get("OPENPYXL_CACHE_GC", "1") == "1"
-_FREEZE = os.environ.get("OPENPYXL_CACHE_FREEZE", "0") == "1"
+_LAZYRAW = os.environ.get("OPENPYXL_LAZYRAW", "1") == "1"
+_PASSTHROUGH = os.environ.get("OPENPYXL_PASSTHROUGH", "1") == "1"
+_LAZY_MIN_BYTES = 8 * 1024 * 1024
+
 _original_load = None
+_orig_bind_cells = None
+
+_ROW_RE = re.compile(rb'<row r="(\d+)"')
+_CELL_RE = re.compile(
+    rb'<c r="([A-Z]+)(\d+)"(?: s="(\d+)")?(?: t="(\w+)")?>'
+    rb'(?:<is><t(?: xml:space="preserve")?>([^<]*)</t></is>|<v>([^<]*)</v>)?</c>'
+)
+
+_COL_LETTERS = {chr(ord('A') + i): i + 1 for i in range(26)}
+_COL_LETTERS.update(
+    {a + b: (i + 1) * 26 + (j + 1)
+     for i, a in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+     for j, b in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}
+)
 
 
 @contextmanager
 def _gc_off():
-    """Disable cyclic GC for the wrapped phase; restore the prior state after.
-
-    The phases wrapped here (parse / rebuild / extract) allocate millions of
-    long-lived objects and almost no cyclic garbage: gen0/1 threshold trips
-    repeatedly rescan the growing live set for nothing."""
     if not _GC_OFF or not gc.isenabled():
         yield
         return
@@ -66,9 +91,301 @@ def _gc_off():
         gc.enable()
 
 
+# ---------------------------------------------------------------- raw census
+
+
+class _RawScan:
+    """Byte-level census of one worksheet XML member."""
+
+    __slots__ = ('data', 'max_row', 'max_col', 'first_row_end', 'simple',
+                 'n_shared', 'n_cells')
+
+    def __init__(self, data: bytes):
+        self.data = data
+        self.simple = False
+        sd0 = data.find(b'<sheetData')
+        sd1 = data.rfind(b'</sheetData>')
+        if sd0 < 0 or sd1 < sd0 or len(data) < _LAZY_MIN_BYTES:
+            return
+        body = data[sd0:sd1]
+        # value types the fast materialiser can't reproduce faithfully
+        for bad in (b'<f>', b'<f ', b't="e"', b't="str"', b't="b"', b't="d"',
+                    b'&'):
+            if bad in body:
+                return
+        # structural surprises: self-closed/attribute-less cells, rich inline
+        n_open = body.count(b'<c ')
+        if n_open == 0 or n_open != body.count(b'<c r=') or n_open != body.count(b'</c>'):
+            return
+        n_is = body.count(b'<is>')
+        if n_is != 0 and n_is != body.count(b'<is><t'):
+            return
+        m = re.search(rb'<dimension ref="A1:([A-Z]+)(\d+)"', data)
+        if m is None or m.group(1).decode() not in _COL_LETTERS:
+            return
+        self.max_col = _COL_LETTERS[m.group(1).decode()]
+        self.max_row = int(m.group(2))
+        h0 = data.find(b'<row r="1"')
+        self.first_row_end = data.find(b'</row>', h0)
+        if h0 < 0 or self.first_row_end < 0 or h0 > sd1:
+            return
+        self.n_shared = body.count(b't="s"')
+        self.n_cells = n_open
+        self.simple = True
+
+
+# ------------------------------------------------------------ lazy sheet ops
+
+
+class _LazyRawState:
+    __slots__ = ('scan', 'archive_path', 'member', 'materialised',
+                 'max_row', 'max_col', 'shared', 'date_formats',
+                 'timedelta_formats', 'epoch', 'data_only', 'rich_text')
+
+    def __init__(self, scan, member, shared, date_formats, timedelta_formats,
+                 epoch, data_only, rich_text):
+        self.scan = scan
+        self.archive_path = None
+        self.member = member
+        self.materialised = False
+        self.max_row = scan.max_row
+        self.max_col = scan.max_col
+        self.shared = shared if (shared is not None and scan.n_shared) else None
+        self.date_formats = date_formats
+        self.timedelta_formats = timedelta_formats
+        self.epoch = epoch
+        self.data_only = data_only
+        self.rich_text = rich_text
+
+
+def _build_cell(ws, cells, styles, letter, r, sid, t, inline, v, state):
+    Cell, cast, from_excel, warn = _imports()
+    col = _COL_LETTERS.get(letter.decode())
+    if col is None:
+        raise ValueError(letter)
+    c = Cell.__new__(Cell)
+    c.parent = ws
+    c.row = r
+    c.column = col
+    if t == b'inlineStr':
+        c._value = inline.decode()
+        c.data_type = 's'
+    elif t == b's':
+        c._value = state.shared[int(v)]
+        c.data_type = 's'
+    else:
+        sid_i = int(sid) if sid else 0
+        if v:
+            value = cast(v.decode())
+            if sid_i in state.date_formats:
+                c.data_type = 'd'
+                try:
+                    value = from_excel(
+                        value, state.epoch,
+                        timedelta=sid_i in state.timedelta_formats)
+                except (OverflowError, ValueError):
+                    warn(f"Cell {letter.decode()}{r} is marked as a date but "
+                         f"the serial value {value} is outside the limits "
+                         f"for dates. The cell will be treated as an error.")
+                    c.data_type = 'e'
+                    value = '#VALUE!'
+            else:
+                c.data_type = 'n'
+        else:
+            value = None
+            c.data_type = 'n'
+        c._value = value
+    c._style = styles[int(sid)] if sid else None
+    c._hyperlink = None
+    c._comment = None
+    cells[(r, col)] = c
+
+
+def append_header_cells(ws, state):
+    data = state.scan.data
+    h0 = data.find(b'<row r="1"')
+    h1 = data.find(b'</row>', h0)
+    styles = ws.parent._cell_styles
+    for m in _CELL_RE.finditer(data, h0, h1):
+        letter, _r, sid, t, inline, v = m.groups()
+        _build_cell(ws, ws._cells, styles, letter, 1, sid, t, inline, v,
+                    state)
+
+
+def _materialise(ws):
+    """Fast byte-level materialisation with stock-parser fallback."""
+    state = ws.__dict__.get('_lazy_raw')
+    if state is None or state.materialised:
+        return
+    state.materialised = True
+    data = state.scan.data
+    try:
+        styles = ws.parent._cell_styles
+        cells = ws._cells
+        pre = len(cells)
+        end = data.rfind(b'</sheetData>')
+        pos = state.scan.first_row_end
+        row_re = _ROW_RE
+        cell_re = _CELL_RE
+        built = 0
+        while True:
+            rm = row_re.search(data, pos, end)
+            if rm is None:
+                break
+            r = int(rm.group(1))
+            row_end = data.find(b'</row>', rm.start(), end)
+            if row_end < 0:
+                row_end = end
+            for m in cell_re.finditer(data, rm.start(), row_end):
+                letter, _rr, sid, t, inline, v = m.groups()
+                _build_cell(ws, cells, styles, letter, r, sid, t, inline, v,
+                            state)
+                built += 1
+            pos = row_end
+        if built + pre < state.scan.n_cells:
+            raise ValueError('fast path missed cells')
+    except Exception:
+        # guaranteed-correct fallback: stock parse of the stashed bytes
+        for k in list(ws._cells):
+            if k[0] != 1:
+                del ws._cells[k]
+        from openpyxl.worksheet._reader import WorksheetReader
+        reader = WorksheetReader(
+            ws, BytesIO(data), state.shared or [],
+            state.data_only, state.rich_text)
+        _orig_bind_cells(reader)
+    if ws._cells:
+        ws._current_row = ws.max_row
+    state.scan.data = b''  # free the buffer
+
+
+# ------------------------------------------------------------------ patches
+
+
+def _make_bind_cells():
+    """Replacement WorksheetReader.bind_cells: big+simple sheets go lazy,
+    everything else goes through the direct-slot fast bind."""
+    from openpyxl.cell import Cell
+
+    def bind_cells(self):
+        ws = self.ws
+        parser = self.parser
+        try:
+            data = parser.source.read()
+        except Exception:
+            data = None
+        if data is not None:
+            member = getattr(parser.source, 'name', None)
+            if _LAZYRAW and len(data) >= _LAZY_MIN_BYTES:
+                scan = _RawScan(data)
+                if scan.simple:
+                    sd0 = data.find(b'<sheetData')
+                    sd1 = data.rfind(b'</sheetData>') + len(b'</sheetData>')
+                    parser.source = BytesIO(
+                        data[:sd0] + b'<sheetData></sheetData>' + data[sd1:])
+                    for _ in parser.parse():
+                        pass
+                    state = _LazyRawState(
+                        scan, member, parser.shared_strings,
+                        parser.date_formats, parser.timedelta_formats,
+                        parser.epoch, parser.data_only, parser.rich_text)
+                    ws.__dict__['_lazy_raw'] = state
+                    append_header_cells(ws, state)
+                    return
+            parser.source = BytesIO(data)
+            if not _FASTBIND:
+                return _orig_bind_cells(self)
+
+        for idx, row in parser.parse():
+            for d in row:
+                c = Cell.__new__(Cell)
+                c.parent = ws
+                r = d['row']
+                c.row = r
+                c.column = d['column']
+                c._value = d['value']
+                c.data_type = d['data_type']
+                c._style = ws.parent._cell_styles[d['style_id']]
+                c._hyperlink = None
+                c._comment = None
+                ws._cells[(r, d['column'])] = c
+        if ws._cells:
+            ws._current_row = ws.max_row
+
+    return bind_cells
+
+
+def _patch_worksheet_access():
+    from openpyxl.worksheet.worksheet import Worksheet
+
+    orig_max_row = Worksheet.max_row
+    orig_max_col = Worksheet.max_column
+    orig_iter_rows = Worksheet.iter_rows
+    orig_get_cell = Worksheet._get_cell
+
+    @property  # type: ignore[misc]
+    def max_row(self):
+        st = self.__dict__.get('_lazy_raw')
+        if st is not None and not st.materialised:
+            return st.max_row
+        return orig_max_row.fget(self)
+
+    @property  # type: ignore[misc]
+    def max_column(self):
+        st = self.__dict__.get('_lazy_raw')
+        if st is not None and not st.materialised:
+            return st.max_col
+        return orig_max_col.fget(self)
+
+    def iter_rows(self, *args, **kwargs):
+        st = self.__dict__.get('_lazy_raw')
+        if _LAZYRAW and st is not None and not st.materialised:
+            _materialise(self)
+        return orig_iter_rows(self, *args, **kwargs)
+
+    def _get_cell(self, row, column):
+        st = self.__dict__.get('_lazy_raw')
+        if _LAZYRAW and st is not None and not st.materialised:
+            if row > 1 or (row == 1 and (1, column) not in self._cells):
+                _materialise(self)
+        return orig_get_cell(self, row, column)
+
+    Worksheet.max_row = max_row
+    Worksheet.max_column = max_column
+    Worksheet.iter_rows = iter_rows
+    Worksheet._get_cell = _get_cell
+
+
+def _patch_save_passthrough():
+    from openpyxl.writer.excel import ExcelWriter
+    from openpyxl.packaging.relationship import RelationshipList
+    from openpyxl.drawing.spreadsheet_drawing import SpreadsheetDrawing
+
+    orig = ExcelWriter.write_worksheet
+
+    def write_worksheet(self, ws):
+        st = ws.__dict__.get('_lazy_raw') if _PASSTHROUGH else None
+        if (st is not None and not st.materialised and st.archive_path
+                and st.scan.n_shared == 0 and not ws._rels):
+            self._archive.writestr(ws.path[1:], st.scan.data,
+                                   compresslevel=1)
+            ws._drawing = SpreadsheetDrawing()
+            ws._drawing.charts = ws._charts
+            ws._drawing.images = ws._images
+            ws._rels = RelationshipList()
+            self.manifest.append(ws)
+            return None
+        if st is not None and not st.materialised:
+            _materialise(ws)  # e.g. shared-string form: write faithfully
+        return orig(self, ws)
+
+    ExcelWriter.write_worksheet = write_worksheet
+
+
+# --------------------------------------------------------------- disk cache
+
+
 def _content_fingerprint(path, size):
-    """md5 of first+last 4MB. ~20ms for 123MB. Cross-path share of identical
-    content; invalidates on real content change. No mtime, no same-second hits."""
     h = hashlib.md5()
     chunk = 4 * 1024 * 1024
     with open(path, "rb") as f:
@@ -87,9 +404,6 @@ def _key(path, data_only, kw):
     h.update(_content_fingerprint(path, st.st_size).encode())
     h.update(str(st.st_size).encode())
     h.update(repr(data_only).encode())
-    # normalize kwargs to real defaults so "omitted" (default) and "explicitly
-    # passed default" hash the same (read_only=None vs read_only=False are the
-    # same non-read-only load).
     defaults = {"read_only": False, "keep_vba": False, "keep_links": True}
     for k, d in defaults.items():
         h.update(f"{k}={kw.get(k, d)}".encode())
@@ -97,21 +411,20 @@ def _key(path, data_only, kw):
 
 
 def _extract_cells(wb):
-    """{sheetname: [(row, col, _value, data_type, style_id, comment, hyperlink), ...]}.
-    style_id is the value-hash index of cell._style in wb._cell_styles.
-    comment/hyperlink are stored so checks reading cell.comment / cell.hyperlink
-    still pass on a hit (the cell-less wb pickle alone drops these per-cell refs)."""
     styles = list(wb._cell_styles)
     st_index = {hash(s): i for i, s in enumerate(styles)}
     cells = {}
     for sn in wb.sheetnames:
         ws = wb[sn]
+        if ws.__dict__.get('_lazy_raw') is not None:
+            cells[sn] = 'LAZY'  # even if materialised: blob stays small
+            continue
         cells[sn] = [
             (
                 r, c, cell._value, cell.data_type,
                 st_index.get(hash(cell._style), -1) if cell._style is not None else -1,
                 getattr(cell, "_comment", None),
-                getattr(cell, "_hyperlink", None),  # MergedCell has no _hyperlink slot
+                getattr(cell, "_hyperlink", None),
             )
             for (r, c), cell in ws._cells.items()
         ]
@@ -119,13 +432,13 @@ def _extract_cells(wb):
 
 
 def _rebuild_cells(wb, cells):
-    """Direct-slot rebuild: Cell.__new__ + slot assignment (skips Cell.__init__
-    re-initialisation and the per-cell StyleArray copy)."""
     from openpyxl.cell import Cell
     new = Cell.__new__
     st_list = list(wb._cell_styles)
     for sn, rows in cells.items():
         ws = wb[sn]
+        if rows == 'LAZY':
+            continue
         new_cells = {}
         max_row = 0
         for r, c, val, dt, sid, comment, hyperlink in rows:
@@ -147,9 +460,6 @@ def _rebuild_cells(wb, cells):
 
 
 def _strip_archive_handles(wb):
-    """Delete read_only zip handles so the cell-less wb pickles cleanly. In
-    normal mode _archive is absent (close() guards via hasattr), so this is a
-    no-op; never *create* the attribute (a spurious None breaks close())."""
     for obj in [wb, *wb.worksheets]:
         try:
             del obj._archive
@@ -157,54 +467,67 @@ def _strip_archive_handles(wb):
             pass
 
 
-def _fill_cache(wb, key):
-    """Extract cells, pickle cell-less wb + cells (atomic tmp+rename), restore wb._cells."""
+def _restore_lazy(wb, path, meta):
+    """Re-attach lazy state for sheets stored as LAZY, reading their member
+    bytes (and shared strings when needed) from the source archive."""
+    import zipfile
+    from openpyxl.reader.strings import read_string_table
+    z = zipfile.ZipFile(path)
+    try:
+        shared = None
+        if 'xl/sharedStrings.xml' in z.namelist():
+            shared = read_string_table(z.open('xl/sharedStrings.xml'))
+        for sn, m in meta.items():
+            (member, data_only, rich_text, date_formats,
+             timedelta_formats, epoch) = m
+            ws = wb[sn]
+            data = z.read(member)
+            scan = _RawScan(data)
+            if not scan.simple:
+                raise ValueError('census failed on cached lazy member')
+            state = _LazyRawState(
+                scan, member, shared if scan.n_shared else None,
+                set(date_formats), set(timedelta_formats), epoch,
+                data_only, rich_text)
+            state.archive_path = path
+            ws.__dict__['_lazy_raw'] = state
+            append_header_cells(ws, state)
+    finally:
+        z.close()
+
+
+def _fill_cache(wb, key, path):
     with _gc_off():
         cells = _extract_cells(wb)
-        saved_cells = {sn: wb[sn]._cells for sn in wb.sheetnames}
+        lazy_states = {}
+        saved_cells = {}
+        for sn in wb.sheetnames:
+            ws = wb[sn]
+            lazy_states[sn] = ws.__dict__.pop('_lazy_raw', None)
+            saved_cells[sn] = ws._cells
         try:
             for sn in wb.sheetnames:
                 wb[sn]._cells = {}
             _strip_archive_handles(wb)
             _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            meta = {
+                sn: (st.member, st.data_only, st.rich_text,
+                     tuple(st.date_formats), tuple(st.timedelta_formats),
+                     st.epoch)
+                for sn, st in lazy_states.items() if st is not None
+            }
             tmp = str(key) + ".tmp"
             with open(tmp, "wb") as f:
-                pickle.dump((wb, cells), f, protocol=pickle.HIGHEST_PROTOCOL)
+                pickle.dump((wb, cells, meta), f,
+                            protocol=pickle.HIGHEST_PROTOCOL)
             os.replace(tmp, key)
         finally:
             for sn in wb.sheetnames:
                 wb[sn]._cells = saved_cells[sn]
-
-
-def _make_fast_bind_cells():
-    """Replacement for WorksheetReader.bind_cells (openpyxl 3.1.x): identical
-    semantics — same slots end-state, same ws._cells keys, same _current_row —
-    but builds Cells via __new__ + direct slot writes and shares the StyleArray
-    table entry instead of copying it per cell."""
-    from openpyxl.cell import Cell
-
-    def bind_cells(self):
-        ws = self.ws
-        styles = ws.parent._cell_styles
-        cells = ws._cells
-        new = Cell.__new__
-        for idx, row in self.parser.parse():
-            for d in row:
-                c = new(Cell)
-                c.parent = ws
-                r = d['row']
-                c.row = r
-                c.column = d['column']
-                c._value = d['value']
-                c.data_type = d['data_type']
-                c._style = styles[d['style_id']]
-                c._hyperlink = None
-                c._comment = None
-                cells[(r, d['column'])] = c
-        if cells:
-            ws._current_row = ws.max_row
-
-    return bind_cells
+                st = lazy_states[sn]
+                if st is not None:
+                    st.archive_path = st.archive_path or path
+                    wb[sn].__dict__['_lazy_raw'] = st
 
 
 def cached_load_workbook(path, data_only=False, **kw):
@@ -216,13 +539,15 @@ def cached_load_workbook(path, data_only=False, **kw):
             t0 = time.perf_counter()
             with _gc_off():
                 with open(key, "rb") as f:
-                    wb, cells = pickle.load(f)
+                    wb, cells, meta = pickle.load(f)
                 _rebuild_cells(wb, cells)
+                _restore_lazy(wb, path, meta)
             wb._oxlcache_data_only = data_only
             if os.environ.get("OPENPYXL_CACHE_DEBUG"):
                 import sys
-                print(f"[oxlcache] HIT {os.path.basename(path)} data_only={data_only} "
-                      f"{time.perf_counter()-t0:.3f}s", file=sys.stderr)
+                print(f"[oxlcache] HIT {os.path.basename(path)} "
+                      f"data_only={data_only} {time.perf_counter()-t0:.3f}s",
+                      file=sys.stderr)
             return wb
     except Exception:
         try:
@@ -232,17 +557,19 @@ def cached_load_workbook(path, data_only=False, **kw):
 
     with _gc_off():
         wb = _original_load(path, data_only=data_only, **kw)
-    if _FREEZE:
-        try:
-            gc.freeze()
-        except Exception:
-            pass
     try:
-        _fill_cache(wb, key)
+        for ws in wb.worksheets:
+            st = ws.__dict__.get('_lazy_raw')
+            if st is not None and st.archive_path is None:
+                st.archive_path = path
+    except Exception:
+        pass
+    try:
+        _fill_cache(wb, key, path)
         if os.environ.get("OPENPYXL_CACHE_DEBUG"):
             import sys
-            print(f"[oxlcache] MISS+fill {os.path.basename(path)} data_only={data_only}",
-                  file=sys.stderr)
+            print(f"[oxlcache] MISS+fill {os.path.basename(path)} "
+                  f"data_only={data_only}", file=sys.stderr)
     except Exception as exc:
         try:
             key.unlink()
@@ -250,29 +577,35 @@ def cached_load_workbook(path, data_only=False, **kw):
             pass
         if os.environ.get("OPENPYXL_CACHE_DEBUG"):
             import sys
-            print(f"[oxlcache] FILL FAILED {type(exc).__name__}: {exc}", file=sys.stderr)
+            print(f"[oxlcache] FILL FAILED {type(exc).__name__}: {exc}",
+                  file=sys.stderr)
     wb._oxlcache_data_only = data_only
     return wb
 
 
 def install():
-    global _original_load
+    global _original_load, _orig_bind_cells
     import openpyxl
     if getattr(openpyxl, "_oxlcache_installed", False):
         return
     _original_load = openpyxl.load_workbook
     openpyxl.load_workbook = cached_load_workbook
-    if _ENABLED and _FASTBIND:
+    if _ENABLED:
         try:
+            import inspect
             from openpyxl.worksheet._reader import WorksheetReader
-            compatible = (
-                openpyxl.__version__.startswith("3.1")
-                and "Cell(self.ws, row=" in inspect.getsource(WorksheetReader.bind_cells)
-            )
-            if compatible:
-                WorksheetReader.bind_cells = _make_fast_bind_cells()
+            if (openpyxl.__version__.startswith("3.1")
+                    and "Cell(self.ws, row=" in
+                    inspect.getsource(WorksheetReader.bind_cells)):
+                _orig_bind_cells = WorksheetReader.bind_cells
+                WorksheetReader.bind_cells = _make_bind_cells()
         except Exception:
-            pass  # fall back to stock bind_cells (correct, just slower)
+            pass
+        try:
+            _patch_worksheet_access()
+            _patch_save_passthrough()
+        except Exception:
+            pass
     openpyxl._oxlcache_installed = True
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
