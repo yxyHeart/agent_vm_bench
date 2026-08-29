@@ -1,38 +1,69 @@
-"""On-disk cache for openpyxl.load_workbook (read_only=False).
+"""On-disk cache + interpreter-level fast paths for openpyxl (read_only=False).
 
 Transparent layer injected via oxlcache.pth (site-packages): every `python3`
-auto-patches openpyxl.load_workbook + Workbook.save. Recipe commands unchanged.
+auto-patches openpyxl.load_workbook. Recipe commands unchanged.
 
-Design:
-- MISS: real load -> extract cell tuples -> empty ws._cells -> pickle the
-  cell-less workbook (small; keeps charts/data_validations/conditional_formatting/
-  merged_cells/freeze_panes/external_links/styles/shared_strings) -> restore.
-- HIT: unpickle cell-less wb (fast) -> rebuild 2.5M Cell objects (skip
-  StyleArray re-wrap, share the styles-table entry directly).
-- key = content fingerprint (first+last 4MB md5 + size + data_only + kwargs):
-  cross-path share of identical content (TP-05 hits TP-04); invalidates on real
-  content change (save/recalc), independent of mtime.
-- save-patch: Workbook.save wraps to also fill the cache from the in-memory wb
-  (no disk re-parse) -> the save->load chain hits (TP-05 save M1 -> TP-07 load
-  M1 hits).
-- read_only / non-file paths / fill failures: passthrough (never block).
+Levers (each independently kill-switchable via env for A/B attribution):
+- disk cache (v1): MISS fills a pickled cell-less wb + cell table; HIT skips
+  XML parse and rebuilds the 2.5M Cell objects from the table.
+- GC off (v2): during load/rebuild/extract the heap grows monotonically toward
+  2.5M live objects; periodic cyclic-GC scans over them are pure CPU waste.
+  Env OPENPYXL_CACHE_GC=0 disables.
+- direct-slot Cell construction (v2): Cell.__new__ + slot assignment instead
+  of Cell.__init__, both on cache HIT rebuild and on openpyxl's own parse path
+  (WorksheetReader.bind_cells); StyleArray table entries are shared instead of
+  copied per cell (StyleArray is treated as immutable by openpyxl).
+  Env OPENPYXL_CACHE_FASTBIND=0 disables the parse-path patch.
+- lxml writer (v2, image-level): openpyxl 3.1.5 flips write_cell/xmlfile to
+  lxml at import when lxml is installed (module-level dispatch), while the
+  read path (iterparse) is unconditionally stdlib ElementTree — so installing
+  lxml speeds up saves without touching loads. Env OPENPYXL_LXML=False (stock
+  openpyxl flag) reverts the writer to etree.
+- v2 dropped the save-path cache fill: in recipe v2 no openpyxl load ever
+  reads a freshly saved file (the only openpyxl save, TP-07's enhance output,
+  is immediately rewritten by LibreOffice recalc), so filling on save was
+  wasted CPU on the critical path.
+- optional gc.freeze() after a MISS load (env OPENPYXL_CACHE_FREEZE=1, default
+  off): excludes the loaded object tree from all later GC scans inside the
+  same process (helps long-lived multi-load scripts).
 
-Result (2-core/4G container, fixed single task): 259s -> 189.6s (-27%), verify
-100% (bit-for-bit). Dual-mode (one parse, both data_only) was tried and rejected:
-the larger dual blob slowed every hit more than the one-parse savings.
+Result (2-core/4G container, fixed single task): v1 259s -> 174.9s (-33%);
+v2 see docs/xlsx-cache-report.md update.
 """
 from __future__ import annotations
 
+import gc
 import hashlib
+import inspect
 import os
 import pickle
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 _CACHE_DIR = Path(os.environ.get("OPENPYXL_CACHE_DIR", "/tmp/oxlcache"))
 _ENABLED = os.environ.get("OPENPYXL_CACHE", "1") == "1"
+_FASTBIND = os.environ.get("OPENPYXL_CACHE_FASTBIND", "1") == "1"
+_GC_OFF = os.environ.get("OPENPYXL_CACHE_GC", "1") == "1"
+_FREEZE = os.environ.get("OPENPYXL_CACHE_FREEZE", "0") == "1"
 _original_load = None
-_original_save = None
+
+
+@contextmanager
+def _gc_off():
+    """Disable cyclic GC for the wrapped phase; restore the prior state after.
+
+    The phases wrapped here (parse / rebuild / extract) allocate millions of
+    long-lived objects and almost no cyclic garbage: gen0/1 threshold trips
+    repeatedly rescan the growing live set for nothing."""
+    if not _GC_OFF or not gc.isenabled():
+        yield
+        return
+    gc.disable()
+    try:
+        yield
+    finally:
+        gc.enable()
 
 
 def _content_fingerprint(path, size):
@@ -88,18 +119,23 @@ def _extract_cells(wb):
 
 
 def _rebuild_cells(wb, cells):
+    """Direct-slot rebuild: Cell.__new__ + slot assignment (skips Cell.__init__
+    re-initialisation and the per-cell StyleArray copy)."""
     from openpyxl.cell import Cell
+    new = Cell.__new__
     st_list = list(wb._cell_styles)
     for sn, rows in cells.items():
         ws = wb[sn]
         new_cells = {}
         max_row = 0
         for r, c, val, dt, sid, comment, hyperlink in rows:
-            cell = Cell(ws, row=r, column=c, style_array=None)
-            if 0 <= sid < len(st_list):
-                cell._style = st_list[sid]  # share table entry (skip StyleArray re-wrap)
+            cell = new(Cell)
+            cell.parent = ws
+            cell.row = r
+            cell.column = c
             cell._value = val
             cell.data_type = dt
+            cell._style = st_list[sid] if 0 <= sid < len(st_list) else None
             cell._comment = comment
             cell._hyperlink = hyperlink
             new_cells[(r, c)] = cell
@@ -122,19 +158,53 @@ def _strip_archive_handles(wb):
 
 
 def _fill_cache(wb, key):
-    """Extract cells, pickle cell-less wb + cells, restore wb._cells."""
-    cells = _extract_cells(wb)
-    saved_cells = {sn: wb[sn]._cells for sn in wb.sheetnames}
-    try:
-        for sn in wb.sheetnames:
-            wb[sn]._cells = {}
-        _strip_archive_handles(wb)
-        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        with open(key, "wb") as f:
-            pickle.dump((wb, cells), f, protocol=pickle.HIGHEST_PROTOCOL)
-    finally:
-        for sn in wb.sheetnames:
-            wb[sn]._cells = saved_cells[sn]
+    """Extract cells, pickle cell-less wb + cells (atomic tmp+rename), restore wb._cells."""
+    with _gc_off():
+        cells = _extract_cells(wb)
+        saved_cells = {sn: wb[sn]._cells for sn in wb.sheetnames}
+        try:
+            for sn in wb.sheetnames:
+                wb[sn]._cells = {}
+            _strip_archive_handles(wb)
+            _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            tmp = str(key) + ".tmp"
+            with open(tmp, "wb") as f:
+                pickle.dump((wb, cells), f, protocol=pickle.HIGHEST_PROTOCOL)
+            os.replace(tmp, key)
+        finally:
+            for sn in wb.sheetnames:
+                wb[sn]._cells = saved_cells[sn]
+
+
+def _make_fast_bind_cells():
+    """Replacement for WorksheetReader.bind_cells (openpyxl 3.1.x): identical
+    semantics — same slots end-state, same ws._cells keys, same _current_row —
+    but builds Cells via __new__ + direct slot writes and shares the StyleArray
+    table entry instead of copying it per cell."""
+    from openpyxl.cell import Cell
+
+    def bind_cells(self):
+        ws = self.ws
+        styles = ws.parent._cell_styles
+        cells = ws._cells
+        new = Cell.__new__
+        for idx, row in self.parser.parse():
+            for d in row:
+                c = new(Cell)
+                c.parent = ws
+                r = d['row']
+                c.row = r
+                c.column = d['column']
+                c._value = d['value']
+                c.data_type = d['data_type']
+                c._style = styles[d['style_id']]
+                c._hyperlink = None
+                c._comment = None
+                cells[(r, d['column'])] = c
+        if cells:
+            ws._current_row = ws.max_row
+
+    return bind_cells
 
 
 def cached_load_workbook(path, data_only=False, **kw):
@@ -144,9 +214,10 @@ def cached_load_workbook(path, data_only=False, **kw):
     try:
         if key.exists():
             t0 = time.perf_counter()
-            with open(key, "rb") as f:
-                wb, cells = pickle.load(f)
-            _rebuild_cells(wb, cells)
+            with _gc_off():
+                with open(key, "rb") as f:
+                    wb, cells = pickle.load(f)
+                _rebuild_cells(wb, cells)
             wb._oxlcache_data_only = data_only
             if os.environ.get("OPENPYXL_CACHE_DEBUG"):
                 import sys
@@ -159,7 +230,13 @@ def cached_load_workbook(path, data_only=False, **kw):
         except Exception:
             pass
 
-    wb = _original_load(path, data_only=data_only, **kw)
+    with _gc_off():
+        wb = _original_load(path, data_only=data_only, **kw)
+    if _FREEZE:
+        try:
+            gc.freeze()
+        except Exception:
+            pass
     try:
         _fill_cache(wb, key)
         if os.environ.get("OPENPYXL_CACHE_DEBUG"):
@@ -178,34 +255,24 @@ def cached_load_workbook(path, data_only=False, **kw):
     return wb
 
 
-def cached_save(self, filename, *args, **kwargs):
-    """Wrap Workbook.save: after the real save, fill the cache for the just-saved
-    file from the in-memory wb (no disk re-parse) so the save->load chain hits."""
-    result = _original_save(self, filename, *args, **kwargs)
-    try:
-        path = str(filename)
-        if not os.path.isfile(path):
-            return result
-        data_only = getattr(self, "_oxlcache_data_only", False)
-        _fill_cache(self, _key(path, data_only, {}))
-        if os.environ.get("OPENPYXL_CACHE_DEBUG"):
-            import sys
-            print(f"[oxlcache] SAVE+fill {os.path.basename(path)} data_only={data_only}",
-                  file=sys.stderr)
-    except Exception:
-        pass
-    return result
-
-
 def install():
-    global _original_load, _original_save
+    global _original_load
     import openpyxl
     if getattr(openpyxl, "_oxlcache_installed", False):
         return
     _original_load = openpyxl.load_workbook
     openpyxl.load_workbook = cached_load_workbook
-    _original_save = openpyxl.Workbook.save
-    openpyxl.Workbook.save = cached_save
+    if _ENABLED and _FASTBIND:
+        try:
+            from openpyxl.worksheet._reader import WorksheetReader
+            compatible = (
+                openpyxl.__version__.startswith("3.1")
+                and "Cell(self.ws, row=" in inspect.getsource(WorksheetReader.bind_cells)
+            )
+            if compatible:
+                WorksheetReader.bind_cells = _make_fast_bind_cells()
+        except Exception:
+            pass  # fall back to stock bind_cells (correct, just slower)
     openpyxl._oxlcache_installed = True
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
