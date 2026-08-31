@@ -3,23 +3,25 @@
 Key idea: the recipe's workbook has one huge sheet (Raw_Sample, 100k rows x 25
 cols, 111-123MB of XML, 2.5M cells) that almost every step only touches for
 dimensions/headers. Instead of paying full XML->Element->Cell materialisation
-for it on every load, keep it *lazy*:
+for it on every load, keep it *lazy* and materialise only what is touched:
 
 - load: read the sheet member once as bytes (fast), run a C-speed census; if
-  the sheet is "simple" (dense, plain numbers / inlineStr / shared-string
-  cells, no formulas / error / bool / date-typed cells, no XML entities, no
-  self-closed or attribute-less cells), bind head+tail through the stock
-  parser (views, cols, autofilter, margins, merged cells ... all preserved)
-  and stash the raw bytes + metadata as lazy state.
-- access: max_row/max_column answered from the census; touching any data cell
-  materialises the whole sheet via a byte-level fast path (Cell.__new__
-  direct slot writes, stock-equivalent value conversion incl. date formats),
-  with a guaranteed-correct fallback to the stock parser on any surprise.
-- save: a still-lazy sheet is written by copying its original XML bytes into
-  the new archive (compresslevel=1) instead of re-serialising 2.5M cells.
+  the sheet is "simple+dense" (plain numbers / inlineStr / shared-string
+  cells, no formulas / errors / bools / dates / entities, exactly
+  max_row*max_col cells, dimension agrees with the last row), bind head+tail
+  through the stock parser and stash the raw bytes + metadata as lazy state.
+- access: max_row/max_column answered from the census; row 1 is pre-built;
+  single-row access materialises just that row (byte seek + parse); full
+  iter_rows() streams row tuples built on the fly (inserting into ws._cells
+  as it goes, so mutations persist like stock); bounded iter_rows
+  materialises the requested range first. Any surprise falls back to the
+  stock parser for guaranteed stock-identical results.
+- save: a still-untouched lazy sheet is written by copying its original XML
+  bytes into the new archive (compresslevel=1) instead of re-serialising
+  2.5M cells. If any data row was touched, materialise fully and write the
+  normal way (edits must survive).
 - disk cache (v1/v2) remains: MISS fills a small blob (lazy sheets contribute
-  a marker, not 2.5M tuples, whether or not they were materialised in that
-  process), HIT rebuilds in well under a second.
+  a marker, not 2.5M tuples), HIT rebuilds in well under a second.
 
 Env switches (for A/B attribution):
 - OPENPYXL_CACHE=0           disable everything (stock openpyxl)
@@ -61,6 +63,7 @@ _GC_OFF = os.environ.get("OPENPYXL_CACHE_GC", "1") == "1"
 _LAZYRAW = os.environ.get("OPENPYXL_LAZYRAW", "1") == "1"
 _PASSTHROUGH = os.environ.get("OPENPYXL_PASSTHROUGH", "1") == "1"
 _LAZY_MIN_BYTES = 8 * 1024 * 1024
+_WINDOW_MAX_ROWS = 2000  # bounded iter_rows ranges materialised row-by-row
 
 _original_load = None
 _orig_bind_cells = None
@@ -95,7 +98,10 @@ def _gc_off():
 
 
 class _RawScan:
-    """Byte-level census of one worksheet XML member."""
+    """Byte-level census of one worksheet XML member. `simple` requires the
+    sheet to be dense (exactly max_row*max_col cells) so every derived fact
+    (dimensions, per-row cell counts) is exact and the fast paths below can
+    reproduce stock behaviour precisely."""
 
     __slots__ = ('data', 'max_row', 'max_col', 'first_row_end', 'simple',
                  'n_shared', 'n_cells')
@@ -107,29 +113,37 @@ class _RawScan:
         sd1 = data.rfind(b'</sheetData>')
         if sd0 < 0 or sd1 < sd0 or len(data) < _LAZY_MIN_BYTES:
             return
-        body = data[sd0:sd1]
         # value types the fast materialiser can't reproduce faithfully
-        for bad in (b'<f>', b'<f ', b't="e"', b't="str"', b't="b"', b't="d"',
-                    b'&'):
-            if bad in body:
+        for bad in (b'<f>', b'<f ', b'<f/', b't="e"', b't="str"', b't="b"',
+                    b't="d"', b'&'):
+            if data.find(bad, sd0, sd1) >= 0:
                 return
         # structural surprises: self-closed/attribute-less cells, rich inline
-        n_open = body.count(b'<c ')
-        if n_open == 0 or n_open != body.count(b'<c r=') or n_open != body.count(b'</c>'):
+        n_open = data.count(b'<c ', sd0, sd1)
+        if n_open == 0 or n_open != data.count(b'<c r=', sd0, sd1) \
+                or n_open != data.count(b'</c>', sd0, sd1):
             return
-        n_is = body.count(b'<is>')
-        if n_is != 0 and n_is != body.count(b'<is><t'):
+        n_is = data.count(b'<is>', sd0, sd1)
+        if n_is != 0 and n_is != data.count(b'<is><t', sd0, sd1):
             return
         m = re.search(rb'<dimension ref="A1:([A-Z]+)(\d+)"', data)
         if m is None or m.group(1).decode() not in _COL_LETTERS:
             return
         self.max_col = _COL_LETTERS[m.group(1).decode()]
         self.max_row = int(m.group(2))
+        # the dimension must agree with the actual last row (no under/overstated
+        # ranges, no rows beyond it)
+        lr = data.rfind(b'<row ')
+        lm = re.match(rb'<row r="(\d+)"', data[lr:lr + 32])
+        if lm is None or int(lm.group(1)) != self.max_row:
+            return
         h0 = data.find(b'<row r="1"')
         self.first_row_end = data.find(b'</row>', h0)
         if h0 < 0 or self.first_row_end < 0 or h0 > sd1:
             return
-        self.n_shared = body.count(b't="s"')
+        if n_open != self.max_row * self.max_col:  # dense
+            return
+        self.n_shared = data.count(b't="s"', sd0, sd1)
         self.n_cells = n_open
         self.simple = True
 
@@ -138,7 +152,7 @@ class _RawScan:
 
 
 class _LazyRawState:
-    __slots__ = ('scan', 'archive_path', 'member', 'materialised',
+    __slots__ = ('scan', 'archive_path', 'member', 'full', 'rows_done',
                  'max_row', 'max_col', 'shared', 'date_formats',
                  'timedelta_formats', 'epoch', 'data_only', 'rich_text')
 
@@ -147,7 +161,8 @@ class _LazyRawState:
         self.scan = scan
         self.archive_path = None
         self.member = member
-        self.materialised = False
+        self.full = False
+        self.rows_done = {1}  # header row is built at load time
         self.max_row = scan.max_row
         self.max_col = scan.max_col
         self.shared = shared if (shared is not None and scan.n_shared) else None
@@ -199,6 +214,7 @@ def _build_cell(ws, cells, styles, letter, r, sid, t, inline, v, state):
     c._hyperlink = None
     c._comment = None
     cells[(r, col)] = c
+    return c
 
 
 def append_header_cells(ws, state):
@@ -213,11 +229,11 @@ def append_header_cells(ws, state):
 
 
 def _materialise(ws):
-    """Fast byte-level materialisation with stock-parser fallback."""
+    """Full byte-level materialisation with stock-parser fallback."""
     state = ws.__dict__.get('_lazy_raw')
-    if state is None or state.materialised:
+    if state is None or state.full:
         return
-    state.materialised = True
+    state.full = True
     data = state.scan.data
     try:
         styles = ws.parent._cell_styles
@@ -259,6 +275,76 @@ def _materialise(ws):
     state.scan.data = b''  # free the buffer
 
 
+def _materialise_row(ws, r):
+    """Materialise a single data row (byte seek + parse). Rows that don't
+    exist in the XML are marked done without building anything (stock would
+    create an empty cell on access, which orig _get_cell still does)."""
+    state = ws.__dict__.get('_lazy_raw')
+    if state is None or state.full or r in state.rows_done:
+        return
+    data = state.scan.data
+    end = data.rfind(b'</sheetData>')
+    pos = data.find(b'<row r="%d"' % r, 0, end)
+    if pos < 0:
+        state.rows_done.add(r)
+        return
+    row_end = data.find(b'</row>', pos, end)
+    if row_end < 0:
+        row_end = end
+    styles = ws.parent._cell_styles
+    for m in _CELL_RE.finditer(data, pos, row_end):
+        letter, _rr, sid, t, inline, v = m.groups()
+        _build_cell(ws, ws._cells, styles, letter, r, sid, t, inline, v,
+                    state)
+    state.rows_done.add(r)
+
+
+def _iter_rows_streaming(ws, state, values_only):
+    """Stock-equivalent full-sheet iteration without upfront materialisation:
+    walk the stashed XML row by row, build + insert cells as yielded (so
+    mutations persist exactly like stock), yield row tuples in document
+    order (== (row, col) order for a dense sheet)."""
+    data = state.scan.data
+    styles = ws.parent._cell_styles
+    cells = ws._cells
+    smax_col = state.max_col
+    rows_done = state.rows_done
+    end = data.rfind(b'</sheetData>')
+    pos = state.scan.first_row_end
+    # header row (row 1) is pre-built
+    hdr = tuple(cells[(1, c)] for c in range(1, smax_col + 1))
+    if values_only:
+        yield tuple(c._value for c in hdr)
+    else:
+        yield hdr
+    row_re = _ROW_RE
+    cell_re = _CELL_RE
+    try:
+        while True:
+            rm = row_re.search(data, pos, end)
+            if rm is None:
+                break
+            r = int(rm.group(1))
+            row_end = data.find(b'</row>', rm.start(), end)
+            if row_end < 0:
+                row_end = end
+            row_cells = []
+            for m in cell_re.finditer(data, rm.start(), row_end):
+                letter, _rr, sid, t, inline, v = m.groups()
+                row_cells.append(
+                    _build_cell(ws, cells, styles, letter, r, sid, t,
+                                inline, v, state))
+            rows_done.add(r)
+            if values_only:
+                yield tuple(c._value for c in row_cells)
+            else:
+                yield tuple(row_cells)
+            pos = row_end
+    finally:
+        state.full = True
+        state.scan.data = b''  # free the buffer
+
+
 # ------------------------------------------------------------------ patches
 
 
@@ -291,6 +377,7 @@ def _make_bind_cells():
                         parser.epoch, parser.data_only, parser.rich_text)
                     ws.__dict__['_lazy_raw'] = state
                     append_header_cells(ws, state)
+                    ws._current_row = scan.max_row  # mirror stock post-load
                     return
             parser.source = BytesIO(data)
             if not _FASTBIND:
@@ -326,28 +413,49 @@ def _patch_worksheet_access():
     @property  # type: ignore[misc]
     def max_row(self):
         st = self.__dict__.get('_lazy_raw')
-        if st is not None and not st.materialised:
+        if st is not None and not st.full:
             return st.max_row
         return orig_max_row.fget(self)
 
     @property  # type: ignore[misc]
     def max_column(self):
         st = self.__dict__.get('_lazy_raw')
-        if st is not None and not st.materialised:
+        if st is not None and not st.full:
             return st.max_col
         return orig_max_col.fget(self)
 
-    def iter_rows(self, *args, **kwargs):
+    def iter_rows(self, min_row=None, max_row=None, min_col=None,
+                  max_col=None, values_only=False):
         st = self.__dict__.get('_lazy_raw')
-        if _LAZYRAW and st is not None and not st.materialised:
-            _materialise(self)
-        return orig_iter_rows(self, *args, **kwargs)
+        if _LAZYRAW and st is not None and not st.full:
+            smax_row = st.max_row
+            full_range = ((min_row is None or min_row <= 1)
+                          and (max_row is None or max_row >= smax_row)
+                          and (min_col is None or min_col <= 1)
+                          and (max_col is None or max_col >= st.max_col))
+            if full_range:
+                return _iter_rows_streaming(self, st, values_only)
+            if (max_row is not None and max_row <= smax_row
+                    and max_row - (min_row or 1) < _WINDOW_MAX_ROWS):
+                lo = max(min_row or 1, 1)
+                for r in range(lo, max_row + 1):
+                    if r not in st.rows_done:
+                        _materialise_row(self, r)
+            else:
+                _materialise(self)
+        return orig_iter_rows(self, min_row=min_row, max_row=max_row,
+                              min_col=min_col, max_col=max_col,
+                              values_only=values_only)
 
     def _get_cell(self, row, column):
         st = self.__dict__.get('_lazy_raw')
-        if _LAZYRAW and st is not None and not st.materialised:
-            if row > 1 or (row == 1 and (1, column) not in self._cells):
-                _materialise(self)
+        if _LAZYRAW and st is not None and not st.full:
+            if row > 1 and row not in st.rows_done:
+                _materialise_row(self, row)
+            if column > st.max_col:  # growth beyond census: keep props exact
+                st.max_col = column
+            if row > st.max_row:
+                st.max_row = row
         return orig_get_cell(self, row, column)
 
     Worksheet.max_row = max_row
@@ -365,8 +473,9 @@ def _patch_save_passthrough():
 
     def write_worksheet(self, ws):
         st = ws.__dict__.get('_lazy_raw') if _PASSTHROUGH else None
-        if (st is not None and not st.materialised and st.archive_path
+        if (st is not None and not st.full and st.rows_done <= {1}
                 and st.scan.n_shared == 0 and not ws._rels):
+            # untouched lazy sheet: copy original XML bytes verbatim
             self._archive.writestr(ws.path[1:], st.scan.data,
                                    compresslevel=1)
             ws._drawing = SpreadsheetDrawing()
@@ -375,8 +484,8 @@ def _patch_save_passthrough():
             ws._rels = RelationshipList()
             self.manifest.append(ws)
             return None
-        if st is not None and not st.materialised:
-            _materialise(ws)  # e.g. shared-string form: write faithfully
+        if st is not None and not st.full:
+            _materialise(ws)  # data rows were touched: write faithfully
         return orig(self, ws)
 
     ExcelWriter.write_worksheet = write_worksheet
@@ -492,6 +601,7 @@ def _restore_lazy(wb, path, meta):
             state.archive_path = path
             ws.__dict__['_lazy_raw'] = state
             append_header_cells(ws, state)
+            ws._current_row = scan.max_row
     finally:
         z.close()
 
