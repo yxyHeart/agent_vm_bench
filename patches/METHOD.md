@@ -1,6 +1,7 @@
-# XLSX 优化层复现方法论：本地写 Dockerfile，远端构建运行
+# 优化层复现方法论：本地写 Dockerfile，远端构建运行
 
-> 适用: `patches/xlsx/active/` 下的优化层(speedups / disk-cache / 二者组合)。
+> 适用: `patches/{xlsx,pdf}/` 下的优化层——任何"在基准镜像上 COPY/注入若干文件"的加速层
+> (xlsx: speedups / disk-cache / 组合; pdf: 同构的注入层均适用)。
 > 模式: **本地仓库改代码 → scp 上机校验 → 远端构建镜像 → 远端跑基准 → 结果回填本地**。
 > 实测记录(2026-09-01, 同日同窗口): stock 258.7s; speedups 218.2s(-15.7%); disk-cache 165.5s(-36.0%); 组合 143.1s(-44.7%)。
 
@@ -9,7 +10,7 @@
 ```text
 本地 (Mac, 仓库)                      远端 (j 机, aarch64 构建宿主)
 ─────────────────                    ─────────────────────────────
-patches/xlsx/active/<层>/            ~/run-<层>/            ← scp + md5 校验
+patches/<域>/<层>/ (域=xlsx 或 pdf)            ~/run-<层>/            ← scp + md5 校验
   Dockerfile                            │ docker build
   注入文件(.py/.pth/.pyx)               ▼
                                      ubuntu-document-bench:<tag>
@@ -34,9 +35,10 @@ ssh j 'ls ~/yxy/document-bench/build-gen/pyroot/include/python3.12/Python.h'  # 
 
 ```bash
 cd /Users/yxy/Desktop/agent_vm_bench
-LAYER=disk-cache            # 或 speedups; speedups 额外带 build.sh
+SCOPE=xlsx                 # 域: xlsx 或 pdf
+LAYER=disk-cache           # 该域下的层目录名; speedups 额外带 build.sh
 rm -rf /tmp/sync_layer && mkdir -p /tmp/sync_layer
-cp patches/xlsx/active/$LAYER/* /tmp/sync_layer/
+cp patches/$SCOPE/$LAYER/* /tmp/sync_layer/
 scp -r /tmp/sync_layer j:~/
 ssh j "rm -rf ~/run-$LAYER && mv ~/sync_layer ~/run-$LAYER"
 ```
@@ -44,7 +46,7 @@ ssh j "rm -rf ~/run-$LAYER && mv ~/sync_layer ~/run-$LAYER"
 **一致性校验(必做)**——两边的 md5 逐一相等才算"跑的是仓库这份代码":
 
 ```bash
-md5 -q patches/xlsx/active/$LAYER/*.py patches/xlsx/active/$LAYER/*.pth
+md5 -q patches/$SCOPE/$LAYER/*.py patches/$SCOPE/$LAYER/*.pth
 ssh j "md5sum ~/run-$LAYER/*.py ~/run-$LAYER/*.pth | awk '{print \$1}'"
 ```
 
