@@ -1,7 +1,0 @@
-FROM pdf-build:native-libs AS artifacts
-
-FROM ubuntu-document-bench:24.04-linuxarm64
-COPY --from=artifacts /out/zlib-ng /opt/zlib-ng
-COPY generic3_setup.sh /generic3_setup.sh
-RUN chmod +x /generic3_setup.sh && /generic3_setup.sh
-ENV LD_PRELOAD=/opt/zlib-ng/lib/libz.so.1
