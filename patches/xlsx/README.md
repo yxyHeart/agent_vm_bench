@@ -2,7 +2,9 @@
 
 XLSX 文档基准的全部优化产物, 按状态分档: `active/`(在用)、`archive/`(废弃留档)、`tools/`(采集工具)。
 
-**推荐组合 = active/ 下两个方案叠加**(`Dockerfile.combo` 形态, 见下): E2E **258.3s → 143.1s (-44.5%), Success 100%**。
+**复现方法论见 `METHOD.md`**(本地写 Dockerfile → 远端构建运行, 含实测基线表与常见坑)。
+
+**推荐组合 = active/ 下两个方案叠加**(`Dockerfile.combo` 形态, 见下): E2E **258.7s → 143.1s (-44.7%), Success 100%**。
 
 ## active/ — 当前在用
 
