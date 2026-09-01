@@ -1,8 +1,8 @@
-# XLSX 通用优化报告：openpyxl speedups 扩展
+# XLSX 通用优化报告：speedups 扩展 + 多次读缓存
 
 > 日期: 2026-08-31 ｜ 场景: 2核4G docker 容器, XLSX 文档基准, 发行版 CPython 原样
 > 约束: **不改 workflow、不识别特定 Sheet/文件结构、不跳过任何步骤**——只优化同一套 openpyxl 调用在底层的执行效率, 任何新的 XLSX 流程进来自动受益。
-> 结论先行: 推荐组合 = **发行版 CPython 原样 + openpyxl_speedups 扩展**。微基准: 冷加载 **22.3s → 17.9s (-19.6%)**; 端到端(同日同窗口 A/B): **258.3s → 217.9s (-15.4%), Success 100%**。zlib-ng、CPU 绑核、LibreOffice 并发参数三项证伪。此前四轮 -77.7% 的工作负载感知层已归档为实验数据, 与本路线互斥。
+> 结论先行: 推荐组合 = **发行版 CPython 原样 + openpyxl_speedups 扩展 + 多次读磁盘缓存**(两方案正交叠加)。端到端(同日同窗口 A/B): **258.3s → 143.1s (-44.5%), Success 100%**; 仅 speedups 时 217.9s(-15.4%), 仅缓存时 174.9s(-33%)。zlib-ng、CPU 绑核、LibreOffice 并发参数三项证伪。大表懒物化路线(结构感知)已放弃并留档; 此前四轮数据见 `docs/xlsx-optimization-report.md`。
 
 ## 一、背景: 钱花在哪
 
@@ -10,9 +10,13 @@ PMU 画像(此前已采集): 处理约 250 万 Cell 执行了 **~190B 条指令*
 
 冷加载的一次拆解(发行版解释器): 纯 iterparse 无操作循环(仅 expat+Element 创建)对该 123MB sheet 实测 **~7.6s**——即 XML→Element 是地板, 其余全部是 Element→Cell 模型转换的 Python 开销。这就是优化对象。
 
-## 二、方案: openpyxl_speedups 扩展
+## 二、方案(两个正交层, 均零 workload 感知)
 
-### 2.1 问题: 每个 Cell 的"Python 协议税"
+### 2.0 多次读磁盘缓存
+
+同一文件的重复 `load_workbook` 只解析一次: 首次(MISS)正常解析后把"无格工作簿壳+紧凑格表"落盘(内容指纹做键: 首尾 4MB md5+大小——同内容不同路径共享、文件改写自动失效); 再次加载(HIT)直接反序列化重建(直填槽位), 跳过全部 XML 解析——实测命中重建 ~3.9s vs 冷解析 22.3s。read_only/非文件路径/任何失败一律透传, 不阻断业务。与 speedups 完全正交: MISS 的解析走加速 reader, HIT 连 XML 都不碰。
+
+### 2.1 openpyxl_speedups: 每个 Cell 的"Python 协议税"
 
 openpyxl 原生加载一个 sheet 的链路:
 
@@ -86,48 +90,52 @@ load_workbook                        (stock, 不动)
 
 ### 微基准(123.5MB / 12.3 万行 / 250 万格工作簿)
 
-| 操作 | stock | 优化后 | 降幅 |
+| 操作 | stock | speedups | +缓存(组合) |
 |------|----:|----:|----:|
-| 全量冷加载 | 22.27s | **17.91s** | **-19.6%** |
-| LibreOffice 重算形态加载(共享字符串) | 16.2s | **14.33s** | **-11.5%** |
+| 全量冷加载(MISS) | 22.27s | **17.91s** | 20.98s(MISS+顺手落盘) |
+| 重复加载(HIT) | 22.27s | 17.91s(仍需解析) | **3.87s**(快照重建, 不碰 XML) |
+| LibreOffice 重算形态加载 | 16.2s | **14.33s** | 17.4s(MISS)/4.1s(HIT) |
 
-归因: 冷加载中解析期 GC 守卫单项约 -3.9s, 其余为融合直建循环; 存盘走原生 stock 路径, 无扰动(26.6s ≈ stock 25.5s, 噪声内)。
+speedups 归因: 冷加载中解析期 GC 守卫单项约 -3.9s, 其余为融合直建循环; 存盘走原生 stock 路径, 无扰动(26.6s ≈ stock 25.5s, 噪声内)。
 
 ### 端到端(同日同窗口 A/B, fixed 单任务)
 
-| 指标 | stock | speedups | Δ |
-|------|----:|----:|----:|
-| Avg Latency | 258.3s | **217.9s** | **-15.4%** |
-| Success Rate | 100% | 100% | — |
+| 指标 | stock | 仅 speedups | 仅缓存(历史) | **组合(推荐)** |
+|------|----:|----:|----:|----:|
+| Avg Latency | 258.3s | 217.9s | 174.9s | **143.1s** |
+| 相对 stock | — | -15.4% | -32% | **-44.5%** |
+| Success Rate | 100% | 100% | 100% | 100% |
 
-逐调用(对照此前的 stock 计时):
+组合逐调用(对照 stock):
 
-| 调用 | 内容 | stock | speedups | 降幅 |
-|------|------|----:|----:|----:|
-| TP-04 | 结构检查(冷加载) | 29.5s | 24.2s | -18% |
-| TP-05 | 图表检查(冷加载) | 25.3s | 19.8s | -22% |
-| TP-07 | 增强存盘 | 51.3s | 45.8s | -11% |
-| TP-08 | 重算+双读 | 62.7s | 54.6s | -13% |
-| TP-09/10 | 读公式/读值 | 20.9/20.5s | 16.9/16.9s | -19% |
-| TP-13 | 业务校验 | 24.6s | 20.7s | -16% |
-| TP-14 | 汇总特征 | 20.5s | 16.5s | -19% |
+| 调用 | 内容 | stock | 组合 | 机制 |
+|------|------|----:|----:|------|
+| TP-04 | 结构检查 | 29.5s | 28.1s | 首次 MISS(加速解析+落盘) |
+| TP-05 | 图表检查 | 25.3s | **5.4s** | 同内容指纹命中(模板副本) |
+| TP-07 | 增强存盘 | 51.3s | 30.7s | load 命中 + save 原生 |
+| TP-08 | 重算+双读 | 62.7s | 61.5s | 重算后新文件两次 MISS |
+| TP-09/10 | 读公式/读值 | 20.9/20.5s | **5.6/5.5s** | TP-08 落盘后命中 |
+| TP-13 | 业务校验 | 24.6s | **8.8s** | 命中重建 |
+| TP-14 | 汇总特征 | 20.5s | **5.3s** | 命中重建 |
 
 含 LibreOffice 的 TP-08 降幅来自该步骤中 soffice 前后的 openpyxl Python 处理; 存盘重的 TP-07 降幅里 load 侧贡献为主, save 侧走 stock 路径不变。
 
 ### 正确性(逐格指纹, 非抽样)
+### 正确性(逐格指纹, 非抽样)
 
-250 万格的(坐标/值/类型/样式/批注/超链接)指纹, 扩展开启 vs 关闭(`OPENPYXL_SPEEDUPS=0`)对照:
+250 万格的(坐标/值/类型/样式/批注/超链接)指纹, 各方案开/关对照:
 
-| 场景 | md5 |
-|------|-----|
-| 模板全量 | 一致 ✓ |
-| LibreOffice 重算形态(共享字符串) | 一致 ✓ |
-| load→save→load 往返 | 一致 ✓ |
+| 场景 | speedups 单独 | 缓存单独 | 组合 |
+|------|------|------|------|
+| 模板全量(MISS/HIT) | 一致 ✓ | 一致 ✓ | 一致 ✓ |
+| LibreOffice 重算形态(共享字符串) | 一致 ✓ | 一致 ✓ | 一致 ✓ |
+| load→save→load 往返 | 一致 ✓ | 一致 ✓ | 一致 ✓ |
 
 ## 四、证伪方向(有数据, 不再投入)
 
 | 方向 | 结论 | 依据 |
 |------|------|------|
+| 大表懒物化/存盘字节直通 | 放弃 | 依赖工作簿结构感知(按结构改变解析/写出行为), 对新流程有行为影响; 数据留档 `docs/xlsx-optimization-report.md` |
 | zlib-ng(zlib-compat 预加载) | 持平 | python/LibreOffice 全兼容但加载/存盘均在噪声内; 该工作簿压缩层全程仅 ~1s 占比 |
 | CPU 绑核(cpuset 替代 CFS 配额) | 持平 | cgroup `nr_throttled=0` 无限流; Python 侧与 LibreOffice 侧均无差异 |
 | LibreOffice 并发参数 | 持平 | MAX_CONCURRENCY 1/2/4 AB 无差异(工作簿仅 36 公式, Calc 无从并行); governor 已是 performance |
@@ -139,6 +147,7 @@ load_workbook                        (stock, 不动)
 |----|----:|------|
 | LibreOffice 重算 | ~16s | 负载本身(soffice 读入 123MB+重算+写出) |
 | 存盘写路径 | ~25s | 250 万格 XML 序列化+压缩, 原生 stock 路径 |
+| 重算后文件首次双读 | ~34s | 内容变更后必然 MISS(TP-08); HIT 已到 4s |
 | 每格 C-API 硬成本 | ~7s | Cell 分配/槽位/拷贝/字典; 地板 = iterparse 7.6s + 模型转换 |
 
 **下一步优先级**(按收益/风险比): ① writer 侧融合 speedups(Cell→et_xmlfile 原生循环, save 是当前最大单项); ② reader 再下沉 native SAX→Cell(攻 7.6s 地板, 工程风险较高); ③ 兼容性 corpus 扩充。zlib/NUMA/绑核/SVE 等外围方向不再投入。
@@ -147,15 +156,17 @@ load_workbook                        (stock, 不动)
 
 | 文件 | 作用 |
 |------|------|
-| `patches/oxlspeed/openpyxl_speedups.pyx` | Cython 加速源(coordinate/parse_cell/融合 bind_cells + GC 守卫) |
-| `patches/oxlspeed/oxlspeed_bootstrap.py` | 懒加载注入钩子(版本门 3.1.5, 失败回退 stock) |
-| `patches/oxlspeed/oxlspeed.pth` | .pth 注入 |
-| `patches/oxlspeed/build.sh` | 扩展编译 + 镜像构建 |
+| `patches/xlsx/active/speedups/` | openpyxl 原生加速扩展(.pyx/bootstrap/.pth/Dockerfile/build.sh) |
+| `patches/xlsx/active/disk-cache/` | 多次读磁盘缓存(openpyxl_cache.py/oxlcache.pth/Dockerfile) |
+| `patches/xlsx/README.md` | 全部 patch 状态说明 + 组合镜像 Dockerfile |
+| `config/common/document-xlsx-combo.yaml` | 组合配置(推荐, 143.1s) |
+| `config/common/document-xlsx-speedups.yaml` | 仅 speedups 配置(217.9s) |
 
 ```bash
-# 扩展编译(宿主需 cython 与目标 python3.12 头文件), 镜像 = 基础镜像 + 上述三文件
-bash patches/oxlspeed/build.sh
-bench-core --provider docker --config config/common/document-xlsx-speedups.yaml -n 1
+# speedups 扩展编译(宿主需 cython 与 python3.12 头文件); 组合镜像见 patches/xlsx/README.md
+bash patches/xlsx/active/speedups/build.sh
+bench-core --provider docker --config config/common/document-xlsx-combo.yaml -n 1    # 143.1s
+bench-core --provider docker --config config/common/document-xlsx-speedups.yaml -n 1 # 217.9s
 ```
 
-环境开关: `OPENPYXL_SPEEDUPS=0`(关闭扩展, 完全回退 stock 行为)。
+环境开关: `OPENPYXL_SPEEDUPS=0`(关扩展)、`OPENPYXL_CACHE=0`(关缓存)、`OPENPYXL_CACHE_DEBUG=1`(命中轨迹)。

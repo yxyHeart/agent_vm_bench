@@ -1,5 +1,0 @@
-FROM ubuntu-document-bench:24.04-linuxarm64
-COPY libzcount2.so /opt/libzcount.so
-ENV LD_PRELOAD=/opt/libzcount.so
-COPY check_probe.py /check_probe.py
-RUN mkdir -p /tmp/zcount

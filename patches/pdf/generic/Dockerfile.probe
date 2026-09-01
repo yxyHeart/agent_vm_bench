@@ -1,0 +1,17 @@
+# zlib 计量镜像: vanilla + 探针 (+ 可选 zlib-ng 变体)
+# build:
+#   docker build -t bench-z:orig .                                    # 原版系统 zlib
+#   docker build --build-arg VARIANT=base --build-arg LIBZ=:...  .    # zlib-ng NEON
+#   docker build --build-arg VARIANT=sve --build-arg LIBZ=:...  .     # zlib-ng SVE
+# VARIANT 为空时纯探针镜像 (系统 zlib); 非空时从 pdf-build:zng-sve 拷对应变体并 LD_PRELOAD。
+ARG VARIANT=none
+FROM pdf-build:zng-sve AS art
+RUN mkdir -p /out/zng-none && echo placeholder > /out/zng-none/.keep
+
+FROM ubuntu-document-bench:24.04-linuxarm64
+ARG VARIANT
+ARG LIBZ=
+COPY --from=art /out/zng-${VARIANT} /opt/zlib
+COPY libzcount.so /opt/libzcount.so
+ENV LD_PRELOAD=/opt/libzcount.so${LIBZ}
+RUN mkdir -p /tmp/zcount && python3 -c "import zlib; zlib.compress(b'x'*100); print('probe image OK')"

@@ -1,9 +1,0 @@
-ARG VARIANT
-FROM pdf-build:zng-sve AS art
-FROM ubuntu-document-bench:24.04-linuxarm64
-ARG VARIANT
-COPY --from=art /out/zng-${VARIANT} /opt/zlib
-COPY libzcount2.so /opt/libzcount.so
-ENV LD_PRELOAD=/opt/libzcount.so${LIBZ}
-COPY check_probe.py /check_probe.py
-RUN mkdir -p /tmp/zcount
