@@ -39,16 +39,11 @@ COPY openpyxl_cache.py oxlcache.pth /usr/local/lib/python3.12/dist-packages/
 
 ## archive/ — 已废弃(留档, 勿部署)
 
-### workload-aware-v1-v4/ — 大表懒物化层(已放弃)
+### workload-aware-final/ — 大表懒物化层 v4 末态(已放弃)
 
-v3/v4 的核心机制——按结构识别"大而简单的表"、只解析头尾、按需物化、存盘字节直通、窗口物化——**全部依赖对工作簿结构的感知, 对新流程存在行为影响, 已放弃**(经评估保留的只有磁盘缓存, 已剥离为 active/disk-cache)。此目录是 v4 末态整体留档(含缓存+GC+直填+懒物化的纠缠实现), 曾达 259→57.6s(-77.7%), 数据见 `docs/xlsx-optimization-report.md`。
-
-| 文件 | 说明 |
-|------|------|
-| `openpyxl_cache.py` | v4 末态(缓存+懒物化纠缠版, 勿用——纯缓存请取 active/disk-cache) |
-| `oxlcache.pth` | 其注入钩子 |
-| `Dockerfile.cached` / `.xlsx-v2/v3/v4` | 各轮镜像层(v2 起依赖构建目录里的 lxml wheel, 不在仓库; v3/v4 内容与 v2 相同) |
-| `sitecustomize.py` | v1 早期调试钩, 失效遗留, 无引用 |
+按结构识别"大而简单的表"改变解析/物化/写出行为的整层路线, 经评估不符合零感知约束而放弃;
+曾达 259→57.6s(-77.7%)。只保留 v4 最终版(openpyxl_cache.py + .pth + Dockerfile + README),
+v1-v3 中间轮次与调试遗留已清; 可继承部分(磁盘缓存/GC/直填)已剥离进 active/。详见其 README。
 
 ## tools/ — 一次性采集工具(留档)
 
