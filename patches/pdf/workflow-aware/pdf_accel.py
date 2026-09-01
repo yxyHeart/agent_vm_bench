@@ -32,15 +32,22 @@ _installed = {"subprocess": False, "pypdf": False, "pdf2image": False, "PIL": Fa
 # ------------------------------------------------------------------ render
 
 
+def _ppm_tmpdir():
+    import tempfile
+
+    if _os.path.isdir("/dev/shm") and _os.access("/dev/shm", _os.W_OK):
+        return tempfile.TemporaryDirectory(dir="/dev/shm")
+    return tempfile.TemporaryDirectory()
+
+
 def _native_rasterize(pdf_path):
     """Rasterize at final target size and return fully-loaded PIL images."""
     import re
     import subprocess as sp
-    import tempfile
 
     from PIL import Image
 
-    with tempfile.TemporaryDirectory() as td:
+    with _ppm_tmpdir() as td:
         try:
             proc = sp.run(
                 ["pdftoppm", "-scale-to", "1000", str(pdf_path), f"{td}/p"],
@@ -123,22 +130,6 @@ def drain_renders(timeout=300.0):
     _render_state["futures"] = []
     _render_state["errors"] = errors
     return errors
-
-
-def _atexit_drain():
-    errors = drain_renders()
-    if errors:
-        import traceback
-
-        for label, exc in errors:
-            print(f"background render failed for {label}:", file=_sys.stderr)
-            traceback.print_exception(type(exc), exc, exc.__traceback__, file=_sys.stderr)
-        _sys.stdout.flush()
-        _sys.stderr.flush()
-        _os._exit(1)
-
-
-atexit.register(_atexit_drain)
 
 
 def _atexit_drain():

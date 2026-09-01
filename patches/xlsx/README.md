@@ -1,6 +1,6 @@
 # XLSX patches
 
-XLSX 文档基准的全部优化产物, 按状态分三档。
+XLSX 文档基准的全部优化产物, 按状态分档: `active/`(在用)、`archive/`(废弃留档)、`tools/`(采集工具)。
 
 ## active/ — 当前推荐方案
 
@@ -25,7 +25,7 @@ bench-core --provider docker --config config/common/document-xlsx-speedups.yaml 
 
 报告: `docs/xlsx-generic-stack-report.md`
 
-## legacy/ — 已废弃(留档, 勿部署)
+## archive/ — 已废弃(留档, 勿部署)
 
 ### workload-aware-v1-v4/ — 工作负载感知加速层
 
