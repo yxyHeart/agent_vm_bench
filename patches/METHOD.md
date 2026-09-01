@@ -1,166 +1,159 @@
-# 优化层复现方法论：本地写 Dockerfile，远端构建运行
+# 优化点测试流程（方法论）
 
-> 适用: `patches/{xlsx,pdf}/` 下的优化层——任何"在基准镜像上 COPY/注入若干文件"的加速层
-> (xlsx: speedups / disk-cache / 组合; pdf: 同构的注入层均适用)。
-> 模式: **本地仓库改代码 → scp 上机校验 → 远端构建镜像 → 远端跑基准 → 结果回填本地**。
-> 实测记录(2026-09-01, 同日同窗口): stock 258.7s; speedups 218.2s(-15.7%); disk-cache 165.5s(-36.0%); 组合 143.1s(-44.7%)。
+> 本文描述**测试一个优化点的标准流程**: 本机写 patch → 远程服务器构建 → 远程跑基准 → 结果回填。
+> 与具体优化无关——xlsx / pdf / 任何新场景的优化点都走同一条流程。
+> 各场景的层说明见 `patches/<场景>/README.md`, 实测数据见各自报告(docs/)。
 
-## 零. 全景
+## 流程总览
 
 ```text
-本地 (Mac, 仓库)                      远端 (j 机, aarch64 构建宿主)
-─────────────────                    ─────────────────────────────
-patches/<域>/<层>/ (域=xlsx 或 pdf)            ~/run-<层>/            ← scp + md5 校验
-  Dockerfile                            │ docker build
-  注入文件(.py/.pth/.pyx)               ▼
-                                     ubuntu-document-bench:<tag>
-                                        │ bench-core --config(指定 image)
-                                        ▼
-                                     容器跑 recipe → E2E 数据
+┌─────────── 本机 (仓库所在) ───────────┐      ┌─────────── 远程测试机 ───────────────┐
+│ 1. 写优化层                            │      │                                      │
+│    patches/<场景>/<层名>/              │ scp  │ 3. 构建实验镜像                       │
+│      Dockerfile (基础镜像+COPY 文件)   │ ───▶ │    docker build -t <base>:<tag> .    │
+│      注入文件 (.py/.pth/.so/...)       │ md5  │                                      │
+│      build.sh (若需编译)               │ 校验 │ 4. 验证注入生效                       │
+│                                      │      │    (不信任"build 成功")               │
+│ 2. 生成本实验组配置                    │      │                                      │
+│    config/common/*-<tag>.yaml          │      │ 5. 跑 E2E: 实验组 + stock 同窗对照    │
+│                                      │      │                                      │
+│ 7. 回填: 报告/数据/提交推送             │ ◀─── │ 6. 产出: Success率 / Avg Latency /    │
+└──────────────────────────────────────┘      │    per-call 计时 (CALLTIMINGS)        │
+                                              └──────────────────────────────────────┘
 ```
 
-每一层只做一件事: 在基础镜像上 `COPY` 几个文件进 `dist-packages`。
-recipe/容器规格/业务命令零改动——容器里每个 `python3` 启动时经 `.pth`
-自动加载注入层。
+核心原则:
 
-## 一. 前置检查(远端)
+- **优化只通过"镜像层"进入测试环境**——基础镜像上一个 Dockerfile COPY 若干文件, recipe/容器规格/业务命令零改动; patch 永远不直接改测试机上的文件。
+- **每一步有明确的"通过判据"**, 不通过就停下排查, 不带病进入下一步。
+- **任何性能结论必须来自同日同窗口的 A/B**(实验组 vs stock 对照), 单边数字不作数。
 
-```bash
-ssh j 'docker images | grep 24.04-linuxarm64'                          # 基础镜像在位
-ssh j 'source ~/yxy/document-bench/venv/bin/activate && cython --version'  # 仅 speedups 需要
-ssh j 'ls ~/yxy/document-bench/build-gen/pyroot/include/python3.12/Python.h'  # 仅 speedups 编译需要
+## Step 1 本机: 写优化层
+
+目录约定:
+
+```text
+patches/<场景>/<层名>/
+├── Dockerfile      # FROM <基础镜像> + COPY 注入文件(必选)
+├── <注入文件>      # .py/.pth/.so/.pyx 等, 按层需要
+└── build.sh        # 仅当需要编译(cython/gcc); 产物 + docker build 一步完成
 ```
 
-## 二. 同步代码上机(本地)
+Dockerfile 模板(注入型优化层的唯一形态):
+
+```dockerfile
+FROM <基础镜像>
+COPY <文件...> <目标路径, 通常 python site-packages>
+```
+
+注意:
+
+- 层要**自带关闭开关**(环境变量), 保证随时能回退 stock 行为做对照。
+- 若 patch openpyxl/pypdf 等库内部, 加**版本门**精确锁版本, 版本不符自动不启用。
+- 注入钩子用 `.pth`(每个 python3 启动自动加载), 多个 .pth 共存时注意**导入顺序竞争**
+  (若 A 钩子先 import 了目标库, B 的懒 finder 永不触发——B 需处理"目标库已在 sys.modules"
+  的情形, 见 patches/xlsx/active/speedups/oxlspeed_bootstrap.py)。
+
+## Step 2 本机: 生成实验组配置
+
+从 stock 配置派生, 只改两处(image → 实验镜像 tag, filename_prefix → 实验组名):
 
 ```bash
-cd /Users/yxy/Desktop/agent_vm_bench
-SCOPE=xlsx                 # 域: xlsx 或 pdf
-LAYER=disk-cache           # 该域下的层目录名; speedups 额外带 build.sh
+ssh 远程 'sed \
+  -e "s|<基础镜像>|<基础镜像>:<tag>|" \
+  -e "s|filename_prefix: \"<stock前缀>\"|filename_prefix: \"<stock前缀>_<tag>\"|" \
+  <stock配置>.yaml > <stock配置>-<tag>.yaml'
+```
+
+配置是实验组的唯一入口: bench-core `--config` 选配置, 配置里 `docker.image` 决定容器跑在哪个镜像上。取回本地入库。
+
+## Step 3 同步上机 + 一致性校验
+
+```bash
+cd <本地仓库>
 rm -rf /tmp/sync_layer && mkdir -p /tmp/sync_layer
-cp patches/$SCOPE/$LAYER/* /tmp/sync_layer/
-scp -r /tmp/sync_layer j:~/
-ssh j "rm -rf ~/run-$LAYER && mv ~/sync_layer ~/run-$LAYER"
+cp patches/<场景>/<层名>/* /tmp/sync_layer/
+scp -r /tmp/sync_layer 远程:~/
+ssh 远程 "rm -rf ~/run-<层名> && mv ~/sync_layer ~/run-<层名>"
 ```
 
-**一致性校验(必做)**——两边的 md5 逐一相等才算"跑的是仓库这份代码":
+**md5 双向校验(必做)**——保证"远端跑的就是仓库这份代码":
 
 ```bash
-md5 -q patches/$SCOPE/$LAYER/*.py patches/$SCOPE/$LAYER/*.pth
-ssh j "md5sum ~/run-$LAYER/*.py ~/run-$LAYER/*.pth | awk '{print \$1}'"
+md5 -q patches/<场景>/<层名>/<文件>...          # 本地
+ssh 远程 "md5sum ~/run-<层名>/<文件>... | awk '{print \$1}'"   # 远端, 逐一相等
 ```
 
-## 三. 远端构建镜像
+## Step 4 远程: 构建实验镜像
 
 ```bash
-# disk-cache(纯 Python 注入, 无编译): 一条 docker build
-ssh j 'cd ~/run-disk-cache && docker build -t ubuntu-document-bench:disk-cache .'
+# 纯文件注入层(无编译):
+ssh 远程 'cd ~/run-<层名> && docker build -t <基础镜像>:<tag> .'
 
-# speedups(需编译): cython → gcc → docker build
-ssh j 'cd ~/run-speedups && source ~/yxy/document-bench/venv/bin/activate && \
-  PYINC=$HOME/yxy/document-bench/build-gen/pyroot/include/python3.12 bash build.sh'
-# build.sh 产物: openpyxl_speedups.cpython-312-aarch64-linux-gnu.so + 镜像 speedups
-# 注: 头文件仅编译期使用, .so 链接的是镜像自带发行版 libpython3.12 ABI
-
-# 组合镜像(两层的 Dockerfile 叠加, 见 patches/xlsx/README.md)
+# 需编译层(cython 等): build.sh 内部完成 编译→docker build
+ssh 远程 'cd ~/run-<层名> && <提供编译工具的 env> bash build.sh'
 ```
 
-## 四. 生效验证(必做, 防"构建成功但没注入")
+通过判据: `Successfully tagged <基础镜像>:<tag>`。
+
+## Step 5 远程: 验证注入生效(不信任 build 成功)
+
+构建成功 ≠ 优化生效。逐层有各自的"生效指纹", 用一次性容器直接验证:
 
 ```bash
-ssh j 'docker run --rm ubuntu-document-bench:disk-cache bash -c "
-python3 -c \"from openpyxl import load_workbook; print(load_workbook.__name__)\"
-"'
-# 预期: cached_load_workbook (stock 是 load_workbook)
-
-ssh j 'docker run --rm ubuntu-document-bench:speedups python3 -c "
-import openpyxl.worksheet._reader as r
-print(type(r.WorkSheetParser.parse_cell).__name__)"'
-# 预期: cython_function_or_method (stock 是 function)
+ssh 远程 'docker run --rm <镜像> python3 -c "<检查项>"'
 ```
 
-功能验证(disk-cache 的命中链, ~1 分钟):
+检查项示例(按层性质选):
+
+| 层性质 | 检查项 | stock 值 | 生效值 |
+|---|---|---|---|
+| monkey-patch 函数 | `type(<被替换函数>).__name__` | `function` | `cython_function_or_method` / wrapper 名 |
+| 包装 API | `<API>.__name__` | 原名 | wrapper 名 |
+| 缓存层 | 同文件两次加载, 第二次 debug 日志 | 无 | `HIT ... N s` |
+
+再补**正确性基线**(成本 ~10 分钟, 强烈建议): 被优化库的输出指纹(如逐格 md5), 实验组 vs `关闭开关` 对照, 必须逐字节一致。
+
+## Step 6 远程: 跑端到端基准
 
 ```bash
-ssh j 'docker run --rm -v /tmp:/h ubuntu-document-bench:disk-cache bash -c "
-export OPENPYXL_CACHE_DEBUG=1
-python3 /h/dump_wb.py /opt/document-bench/xlsx/input/monthly_operations_template.xlsx   # MISS ~25s
-python3 /h/dump_wb.py /opt/document-bench/xlsx/input/monthly_operations_template.xlsx   # HIT ~4s, md5 相同
-"'
-```
+ssh 远程
+cd <基准仓库> && source venv/bin/activate
 
-正确性基线(逐格 md5, 开/关对照, ~10 分钟):
+# 6a 清残留沙箱
+bench-core --provider docker --config <实验组配置> --cleanup
 
-```bash
-ssh j 'docker run --rm -v /tmp:/h ubuntu-document-bench:<tag> sh -c "
-python3 /h/dump_wb.py /opt/document-bench/xlsx/input/monthly_operations_template.xlsx       # 开
-OPENPYXL_CACHE=0 OPENPYXL_SPEEDUPS=0 python3 /h/dump_wb.py /opt/document-bench/xlsx/input/monthly_operations_template.xlsx  # 关
-"'
-# 两行 md5 必须一致 (模板基准指纹 fcb714e2c909329001c81284c425b035)
-```
+# 6b 实验组
+bench-core --provider docker --config <实验组配置> -n 1 2>&1 | tee /tmp/e2e_<tag>.log
 
-## 五. 端到端基准
+# 6c stock 对照(同日同窗口, 不可省——排除环境漂移)
+bench-core --provider docker --config <stock配置> -n 1
 
-配置文件决定容器镜像(`docker.image` 字段), 每个实验组一个 yaml:
-
-```bash
-ssh j
-cd ~/yxy/document-bench && source venv/bin/activate
-
-# 5a 清残留沙箱
-bench-core --provider docker --config config/common/document-xlsx-<tag>.yaml --cleanup
-
-# 5b 实验组
-bench-core --provider docker --config config/common/document-xlsx-<tag>.yaml -n 1 \
-  2>&1 | tee /tmp/e2e_<tag>.log
-
-# 5c stock 对照(同日同窗口, 排除环境漂移)
-bench-core --provider docker --config config/common/document-xlsx.yaml -n 1
-
-# 5d 逐调用数据(CALLTIMINGS JSON)
+# 6d per-call 计时(逐调用归因)
 grep -o "\[CALLTIMINGS\].*" /tmp/e2e_<tag>.log | head -1
 ```
 
-配置生成模板(从 stock 配置派生):
+通过判据(两个都要):
+
+1. `Success Rate: 100%` —— 不只是退出码, verify 脚本任一业务 check 失败即任务失败, 它同时证明语义未破坏;
+2. 实验组 Avg Latency 明显低于同窗 stock(差值小于噪声时结论记"持平", 不硬贴收益)。
+
+## Step 7 回填本机
 
 ```bash
-ssh j 'cd ~/yxy/document-bench && sed \
-  -e "s|ubuntu-document-bench:24.04-linuxarm64|ubuntu-document-bench:<tag>|" \
-  -e "s|filename_prefix: \"document_xlsx_bench\"|filename_prefix: \"document_xlsx_<tag>_bench\"|" \
-  config/common/document-xlsx.yaml > config/common/document-xlsx-<tag>.yaml'
+# 数据写进该场景的报告(docs/<场景>-*.md): 总表 + 逐调用对照 + 归因
+# 远端临时目录按需清理(保留亦可, 便于考古重跑):
+ssh 远程 "rm -rf ~/run-<层名>"
+# 本地提交推送:
+git add patches/... config/... docs/... && git commit -m "..." && git push <remote> <branch>:main
 ```
 
-已有配置: `document-xlsx-speedups.yaml` / `document-xlsx-disk-cache.yaml` / `document-xlsx-combo.yaml`(组合)。
+## 附: 常见坑(按流程步骤)
 
-关键读数: `Success Rate: 100%` + `Avg Latency`。Success 100% 不只是退出码——
-verify 脚本任一 check 失败即任务失败, 它同时证明业务语义没被破坏。
-
-## 六. 结果回填本地
-
-```bash
-# 数据写进报告(docs/xlsx-generic-stack-report.md), 逐调用对照表更新
-# 远端临时目录清理:
-ssh j "rm -rf ~/run-<layer>"
-# 本地提交(分支推 fork):
-git add patches/... docs/... config/... && git commit -m "..." && git push myfork <branch>:main
-```
-
-## 七. 实测基线表(2026-09-01)
-
-| 组 | image tag | E2E | vs stock |
-|----|-----------|----:|----:|
-| stock | `24.04-linuxarm64` | 258.7s | — |
-| speedups | `speedups` | 218.2s | -15.7% |
-| disk-cache | `disk-cache` | 165.5s | -36.0% |
-| 组合 | `xlsx-combo` | 143.1s | -44.7% |
-
-微基准参考: 冷加载 22.3s(stock) / 17.9s(speedups) / 3.9s(缓存 HIT); 重算形态 HIT 4.1s。
-
-## 八. 常见坑
-
-| 症状 | 原因 | 解法 |
-|------|------|------|
-| 构建成功但 `type(parse_cell)` 仍是 function | 组合镜像里 `oxlcache.pth` 先 import 了 openpyxl, speedups 的懒 finder 永不触发 | 已修: bootstrap 检测 openpyxl 已在 sys.modules 则立即 patch; 旧 .so 需重建 |
-| `Python.h: No such file or directory` | PYINC 默认相对路径在 j 机不成立 | `PYINC=$HOME/yxy/document-bench/build-gen/pyroot/include/python3.12 bash build.sh` |
-| 缓存永不命中 | 每次实验前 `--cleanup` 重建容器——缓存目录 `/tmp/oxlcache` 在容器内, 容器销毁即失效属预期 | 同容器内连续调用才体现 HIT(基准内 TP-05/09/10/13/14 均命中) |
-| 结果漂移 | 环境噪声 | stock 对照必须同日同窗口跑; 报告数字以 A/B 差为准 |
+| 步骤 | 症状 | 原因与解法 |
+|---|---|---|
+| 4 | `Python.h: No such file` | 编译头文件路径不对, 用环境变量显式指定 PYINC(仅编译期需要, .so 链接镜像自带 libpython) |
+| 5 | build 成功但 type 检查仍是 stock | 多 .pth 导入顺序竞争: 某钩子先 import 目标库, 懒 finder 永不触发; 钩子需处理"已导入则立即 patch" |
+| 5 | 缓存类优化"永不命中" | 缓存落在容器内 `/tmp`, `--cleanup` 销毁容器即失效——属预期; 命中收益体现在同一任务内的重复调用 |
+| 6 | 数字漂移 | stock 对照未同日同窗跑; 结论只认 A/B 差值 |
+| 6 | 容器规格不符 | 配置里 cpu_limit/memory_limit 决定 `docker run --cpus/-m`, 别在测试机上手工 docker run 跑性能数据 |
