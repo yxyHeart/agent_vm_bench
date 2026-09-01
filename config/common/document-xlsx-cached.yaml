@@ -36,7 +36,7 @@ e2b:
     E2B_HTTP_SSL: "false"
 
 docker:
-  image: "ubuntu-document-bench:gen-b2l"  # same image as PDF (LibreOffice/Poppler + seed + validate)
+  image: "ubuntu-document-bench:cached"  # same image as PDF (LibreOffice/Poppler + seed + validate)
   container_prefix: "doc-bench-xlsx"               # Container name prefix (doc-bench-xlsx-1, ...)
   cpu_limit: 2.0                                    # CPU limit per container (--cpus)
   memory_limit: "4g"                                # Memory limit per container (-m); LibreOffice recalc is memory-heavy
@@ -72,15 +72,15 @@ document:
 
 # Test run configuration
 test:
-  duration: 160                     # Test duration (seconds)
+  duration: 260                     # Test duration (seconds)
   stats_interval: 10                # Stats snapshot interval (seconds)
   benchmark_percent: 1.0            # Fraction of sandboxes for benchmark (1.0 = 100%, 0.5 = 50%)
-  benchmark_mode: "round_robin"     # "fixed" (default) or "round_robin"
+  benchmark_mode: "fixed"     # "fixed" (default) or "round_robin"
   round_size: 5                     # Sandboxes per round (group_count = ceil(total / round_size))
-  round_count: 20                   # Max number of rounds
+  round_count: 1                   # Max number of rounds
   round_interval: 3                 # Round interval in seconds
 
 # Report configuration
 report:
   output_dir: "results/document/xlsx"
-  filename_prefix: "document_xlsx_genb2l_bench"
+  filename_prefix: "document_xlsx_bench"
