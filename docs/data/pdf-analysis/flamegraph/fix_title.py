@@ -6,6 +6,7 @@ mojibake.encode('latin-1').decode('utf-8') == original.
 
 Usage: python3 fix_title.py file1.svg [file2.svg ...]
 """
+
 import re
 import sys
 

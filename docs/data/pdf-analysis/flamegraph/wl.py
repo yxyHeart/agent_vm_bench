@@ -3,6 +3,7 @@
 fill = 18 recipe fields (page-correct) via pypdf; render = pdftoppm -r 200 + PIL save cl=6.
 ROUNDS env controls repetition (default 3) for enough perf samples.
 """
+
 import glob
 import os
 import subprocess
