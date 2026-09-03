@@ -35,7 +35,7 @@ e2b:
     E2B_HTTP_SSL: "false"
 
 docker:
-  image: "ubuntu-document-bench:pdf-zng"           # document image with PIL fast PNG (compress_level=1)
+  image: "ubuntu-document-bench:pdf-zng"           # document image with zlib-ng (source-built, LD_PRELOAD)
   container_prefix: "doc-bench-pdf"                # Container name prefix (doc-bench-pdf-1, ...)
   cpu_limit: 2.0                                   # CPU limit per container (--cpus)
   memory_limit: "4g"                               # Memory limit per container (-m); LibreOffice recalc is memory-heavy

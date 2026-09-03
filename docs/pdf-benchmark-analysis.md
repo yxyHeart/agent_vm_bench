@@ -239,6 +239,20 @@ PDF 文档基准(2核4G 容器, 单任务)优化前端到端 **11.997s**。探�
 
 zlib 内部节省 845ms 约占 E2E 节省 1.06s 的 80%, 两个口径 (探针计时的库内耗时 vs 端到端 wall) 方向一致、数量级吻合。正确性: PNG 字节流不同 (压缩路径变了) 但**解码像素逐位一致**, P04 逐像素校验 100% 通过 (15/15 任务)。
 
+##### 火焰图对比 (优化前后, `docs/data/pdf-analysis/flamegraph/`)
+
+对同一 workload (复刻 P03: 10× fill + 10× render ×3 轮) 用 py-spy 99Hz native 采样, 优化前后各一份 (原始数据与生成脚本见同目录):
+
+| 指标 | 系统 zlib | zlib-ng | 变化 |
+|------|----------:|--------:|-----:|
+| Python 侧总样本 | 2,080 | 1,577 | -24.2% |
+| zlib 帧样本 | **948 (45.6%)** | **477 (30.2%)** | **-49.7%** |
+| fill 路径样本 (未优化对照) | 605 | 638 | 持平 (噪声内) |
+
+- **`png-zlib-before.svg` vs `png-zlib-after.svg`** (主对比): 只截取 PNG 编码→zlib 路径, 跳过未优化路径。优化前 libz 是火焰图中 `_encode_tile` 下方的整块大框 (符号剥离不可细分); 优化后同位置缩水约一半, 且 `deflate_medium` / `longest_match_neon` 等内部函数名可见。
+- **`flame-diff.svg`**: 差分图, zlib 叶帧 -29.7% (纯蓝); fill 侧 (pypdf 读/克隆) 两侧持平, 证明收益全部来自 zlib 替换。
+- `flame-full-before/after.svg`: 全景 (含 fill 路径上下文)。
+
 ### 4.2 pypdf 协议继承移除
 
 #### 背景
