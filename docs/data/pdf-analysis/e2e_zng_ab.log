@@ -1,0 +1,288 @@
+2026-09-01 11:57:46 [INFO] ================================================================================
+Sandbox Bench - Performance Test
+================================================================================
+  Backend:   docker
+  Workflow:  document
+  Mode:      Full workflow
+  Total:     10 sandboxes
+  Case:      PDF
+  Workspace: /root/.openclaw/workspace/tool-modeling/SUB-MEM-PDF-01
+  Create Batch: 10 x 1 (interval 3s)
+  Task Batch:   10 x 1 (interval 5s)
+  Duration: 45s
+  Benchmark Mode: round_robin (3 rounds, interval 3s)
+2026-09-01 11:57:46 [INFO] ================================================================================
+2026-09-01 11:57:46 [INFO] 
+[Phase 1] Creating sandboxes...
+2026-09-01 11:57:46 [INFO] 
+============================================================
+2026-09-01 11:57:46 [INFO] Batched Container Creation
+2026-09-01 11:57:46 [INFO]   Image: ubuntu-document-bench:pdf-zng
+2026-09-01 11:57:46 [INFO]   Spec:  2.0vCPU / 4g
+2026-09-01 11:57:46 [INFO]   Total: 10 containers
+2026-09-01 11:57:46 [INFO]   Batches: 10 x 1
+2026-09-01 11:57:46 [INFO]   Interval: 3s
+2026-09-01 11:57:46 [INFO] ============================================================
+2026-09-01 11:57:46 [INFO] 
+[Batch 0/9] Creating containers 1-1
+2026-09-01 11:57:47 [INFO] [Container1] Created in 1.0s, checking ready...
+2026-09-01 11:57:47 [INFO] [Container1] Document runtime ready in 0.1s
+2026-09-01 11:57:47 [INFO] [Container1] Ready in 0.1s, total 1.1s
+2026-09-01 11:57:47 [INFO] Waiting 3s before next batch...
+2026-09-01 11:57:50 [INFO] 
+[Batch 1/9] Creating containers 2-2
+2026-09-01 11:57:51 [INFO] [Container2] Created in 1.3s, checking ready...
+2026-09-01 11:57:51 [INFO] [Container2] Document runtime ready in 0.1s
+2026-09-01 11:57:51 [INFO] [Container2] Ready in 0.1s, total 1.4s
+2026-09-01 11:57:51 [INFO] Waiting 3s before next batch...
+2026-09-01 11:57:54 [INFO] 
+[Batch 2/9] Creating containers 3-3
+2026-09-01 11:57:55 [INFO] [Container3] Created in 1.2s, checking ready...
+2026-09-01 11:57:55 [INFO] [Container3] Document runtime ready in 0.1s
+2026-09-01 11:57:55 [INFO] [Container3] Ready in 0.1s, total 1.3s
+2026-09-01 11:57:55 [INFO] Waiting 3s before next batch...
+2026-09-01 11:57:58 [INFO] 
+[Batch 3/9] Creating containers 4-4
+2026-09-01 11:58:00 [INFO] [Container4] Created in 1.2s, checking ready...
+2026-09-01 11:58:00 [INFO] [Container4] Document runtime ready in 0.2s
+2026-09-01 11:58:00 [INFO] [Container4] Ready in 0.2s, total 1.4s
+2026-09-01 11:58:00 [INFO] Waiting 3s before next batch...
+2026-09-01 11:58:03 [INFO] 
+[Batch 4/9] Creating containers 5-5
+2026-09-01 11:58:04 [INFO] [Container5] Created in 1.1s, checking ready...
+2026-09-01 11:58:04 [INFO] [Container5] Document runtime ready in 0.2s
+2026-09-01 11:58:04 [INFO] [Container5] Ready in 0.2s, total 1.3s
+2026-09-01 11:58:04 [INFO] Waiting 3s before next batch...
+2026-09-01 11:58:07 [INFO] 
+[Batch 5/9] Creating containers 6-6
+2026-09-01 11:58:08 [INFO] [Container6] Created in 1.2s, checking ready...
+2026-09-01 11:58:09 [INFO] [Container6] Document runtime ready in 0.2s
+2026-09-01 11:58:09 [INFO] [Container6] Ready in 0.2s, total 1.3s
+2026-09-01 11:58:09 [INFO] Waiting 3s before next batch...
+2026-09-01 11:58:12 [INFO] 
+[Batch 6/9] Creating containers 7-7
+2026-09-01 11:58:13 [INFO] [Container7] Created in 1.2s, checking ready...
+2026-09-01 11:58:13 [INFO] [Container7] Document runtime ready in 0.1s
+2026-09-01 11:58:13 [INFO] [Container7] Ready in 0.1s, total 1.4s
+2026-09-01 11:58:13 [INFO] Waiting 3s before next batch...
+2026-09-01 11:58:16 [INFO] 
+[Batch 7/9] Creating containers 8-8
+2026-09-01 11:58:17 [INFO] [Container8] Created in 1.4s, checking ready...
+2026-09-01 11:58:18 [INFO] [Container8] Document runtime ready in 0.2s
+2026-09-01 11:58:18 [INFO] [Container8] Ready in 0.2s, total 1.6s
+2026-09-01 11:58:18 [INFO] Waiting 3s before next batch...
+2026-09-01 11:58:21 [INFO] 
+[Batch 8/9] Creating containers 9-9
+2026-09-01 11:58:22 [INFO] [Container9] Created in 1.2s, checking ready...
+2026-09-01 11:58:22 [INFO] [Container9] Document runtime ready in 0.2s
+2026-09-01 11:58:22 [INFO] [Container9] Ready in 0.2s, total 1.4s
+2026-09-01 11:58:22 [INFO] Waiting 3s before next batch...
+2026-09-01 11:58:25 [INFO] 
+[Batch 9/9] Creating containers 10-10
+2026-09-01 11:58:26 [INFO] [Container10] Created in 1.1s, checking ready...
+2026-09-01 11:58:26 [INFO] [Container10] Document runtime ready in 0.2s
+2026-09-01 11:58:26 [INFO] [Container10] Ready in 0.2s, total 1.3s
+2026-09-01 11:58:26 [INFO] 
+Sandboxes ready: 10
+2026-09-01 11:58:26 [INFO] 
+[Phase 3] Starting stats collector...
+2026-09-01 11:58:26 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:26 [INFO] 
+[Phase 4] Starting round-robin tasks...
+2026-09-01 11:58:26 [INFO] T+   0.0s  Status Snapshot
+2026-09-01 11:58:26 [INFO] [RoundRobin] Using round_size=5, calculated 2 groups
+2026-09-01 11:58:26 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:26 [INFO] [RoundRobin] Preparing groups: 10 sandboxes ÷ 2 groups
+2026-09-01 11:58:26 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:58:26 [INFO] [RoundRobin] Base per round: 5, remainder: 0
+2026-09-01 11:58:26 [INFO]   Document:    0/  0  avg=0.00s  p99=0.00s
+2026-09-01 11:58:26 [INFO] [RoundRobin] Group sizes: [5, 5]
+2026-09-01 11:58:26 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:26 [INFO] 
+[RoundRobin] Will run up to 3 rounds (whichever ends first: round_count=3 or duration=45s)
+2026-09-01 11:58:26 [INFO] [RoundRobin] Sandbox groups: 2, 5 sandboxes per round
+2026-09-01 11:58:26 [INFO] 
+[Round 0] Starting 5 sandboxes
+2026-09-01 11:58:36 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:36 [INFO] T+  10.0s  Status Snapshot
+2026-09-01 11:58:36 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:36 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:58:36 [INFO]   Document:    0/  0  avg=0.00s  p99=0.00s
+2026-09-01 11:58:36 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:38 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 67.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 63.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 56.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 57.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 59.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 56.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 58.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 57.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 239.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 89.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 247.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 111.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 493.6, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 194.9, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 135.6, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 124.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 203.9, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7805.5, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 130.5, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 861.4, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 131.7, "ok": true}]
+2026-09-01 11:58:38 [INFO] [Sandbox1] PDF round 0 completed (11.43s)
+2026-09-01 11:58:38 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 62.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 59.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 59.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 57.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 57.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 60.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 59.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 60.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 240.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 93.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 249.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 111.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 497.1, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 187.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 132.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 133.2, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 199.5, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7836.8, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 127.2, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 862.4, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 108.6, "ok": true}]
+2026-09-01 11:58:38 [INFO] [Sandbox5] PDF round 0 completed (11.43s)
+2026-09-01 11:58:38 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 67.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 64.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 57.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 57.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 59.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 57.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 59.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 60.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 237.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 86.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 253.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 100.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 497.8, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 191.8, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 137.5, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 129.5, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 205.7, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7770.7, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 155.7, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 865.8, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 139.5, "ok": true}]
+2026-09-01 11:58:38 [INFO] [Sandbox2] PDF round 0 completed (11.44s)
+2026-09-01 11:58:38 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 67.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 67.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 61.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 58.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 65.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 63.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 62.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 63.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 236.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 64.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 245.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 106.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 502.5, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 181.0, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 142.8, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 124.5, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 202.0, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7822.2, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 130.4, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 865.7, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 116.6, "ok": true}]
+2026-09-01 11:58:38 [INFO] [Sandbox3] PDF round 0 completed (11.44s)
+2026-09-01 11:58:38 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 65.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 57.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 58.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 57.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 56.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 59.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 61.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 58.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 238.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 93.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 246.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 106.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 505.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 174.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 147.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 126.5, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 194.5, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7813.9, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 136.3, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 867.5, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 125.9, "ok": true}]
+2026-09-01 11:58:38 [INFO] [Sandbox4] PDF round 0 completed (11.44s)
+2026-09-01 11:58:38 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:38 [INFO] T+  11.4s  Status Snapshot
+2026-09-01 11:58:38 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:38 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:58:38 [INFO]   Document:    5/  5  avg=11.43s  p99=11.44s
+2026-09-01 11:58:38 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:38 [INFO] [Round 0] Completed: 5 sandboxes, avg: PDF-P01-inspect_prepare=1663ms, PDF-P02-build=654ms, PDF-P03-process_publish=7946ms, PDF-P04-verify_deliver=989ms
+2026-09-01 11:58:41 [INFO] 
+[Round 1] Starting 5 sandboxes
+2026-09-01 11:58:46 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:46 [INFO] T+  20.0s  Status Snapshot
+2026-09-01 11:58:46 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:46 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:58:46 [INFO]   Document:    5/  5  avg=11.43s  p99=11.44s
+2026-09-01 11:58:46 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:52 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 61.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 63.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 95.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 63.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 64.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 68.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 64.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 65.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 243.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 59.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 238.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 98.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 501.1, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 179.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 86.0, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 75.3, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 139.8, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7793.6, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 130.5, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 925.6, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 143.6, "ok": true}]
+2026-09-01 11:58:52 [INFO] [Sandbox7] PDF round 1 completed (11.40s)
+2026-09-01 11:58:52 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 64.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 61.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 86.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 63.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 63.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 60.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 56.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 57.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 232.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 91.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 247.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 92.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 501.3, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 191.3, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 90.2, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 74.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 138.8, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7780.9, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 142.9, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 910.9, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 145.5, "ok": true}]
+2026-09-01 11:58:52 [INFO] [Sandbox8] PDF round 1 completed (11.40s)
+2026-09-01 11:58:52 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 64.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 64.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 85.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 67.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 64.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 66.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 64.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 65.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 245.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 60.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 240.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 96.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 495.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 190.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 88.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 74.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 140.1, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7720.9, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 179.3, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 942.9, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 144.5, "ok": true}]
+2026-09-01 11:58:52 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 66.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 62.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 88.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 66.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 61.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 70.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 64.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 64.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 242.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 57.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 245.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 97.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 496.1, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 184.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 88.9, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 74.2, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 139.6, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7731.1, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 175.4, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 935.7, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 147.8, "ok": true}]
+2026-09-01 11:58:52 [INFO] [Sandbox10] PDF round 1 completed (11.40s)
+2026-09-01 11:58:52 [INFO] [Sandbox9] PDF round 1 completed (11.39s)
+2026-09-01 11:58:52 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 60.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 65.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 86.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 61.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 62.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 55.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 59.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 55.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 235.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 93.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 244.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 99.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 498.0, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 187.8, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 90.2, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 74.6, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 140.2, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7785.0, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 142.4, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 913.9, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 144.6, "ok": true}]
+2026-09-01 11:58:52 [INFO] [Sandbox6] PDF round 1 completed (11.40s)
+2026-09-01 11:58:52 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:52 [INFO] T+  25.8s  Status Snapshot
+2026-09-01 11:58:52 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:52 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:58:52 [INFO]   Document:   10/ 10  avg=11.42s  p99=11.44s
+2026-09-01 11:58:52 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:52 [INFO] [Round 1] Completed: 5 sandboxes, avg: PDF-P01-inspect_prepare=1681ms, PDF-P02-build=490ms, PDF-P03-process_publish=7916ms, PDF-P04-verify_deliver=1071ms
+2026-09-01 11:58:55 [INFO] 
+[Round 2] (cycle 1, group 0) Starting 5 sandboxes
+2026-09-01 11:58:56 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:56 [INFO] T+  30.0s  Status Snapshot
+2026-09-01 11:58:56 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:58:56 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:58:56 [INFO]   Document:   10/ 10  avg=11.42s  p99=11.44s
+2026-09-01 11:58:56 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:06 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:06 [INFO] T+  40.0s  Status Snapshot
+2026-09-01 11:59:06 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:06 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:59:06 [INFO]   Document:   10/ 10  avg=11.42s  p99=11.44s
+2026-09-01 11:59:06 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:07 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 66.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 63.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 102.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 58.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 56.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 61.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 59.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 61.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 236.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 94.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 239.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 116.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 506.2, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 192.0, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 145.9, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 76.5, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 136.4, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7709.8, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 205.8, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 930.5, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 139.6, "ok": true}]
+2026-09-01 11:59:07 [INFO] [Sandbox4] PDF round 2 completed (11.57s)
+2026-09-01 11:59:07 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 65.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 70.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 101.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 67.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 66.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 67.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 63.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 67.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 236.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 64.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 246.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 101.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 506.3, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 188.3, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 152.5, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 83.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 137.1, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7698.1, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 203.5, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 929.3, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 151.8, "ok": true}]
+2026-09-01 11:59:07 [INFO] [Sandbox1] PDF round 2 completed (11.57s)
+2026-09-01 11:59:07 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 61.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 68.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 103.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 63.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 69.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 63.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 65.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 62.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 244.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 64.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 246.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 98.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 498.3, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 192.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 157.7, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 82.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 142.3, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7736.8, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 159.1, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 931.4, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 146.8, "ok": true}]
+2026-09-01 11:59:07 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 68.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 66.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 97.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 65.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 65.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 67.2, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 64.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 68.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 240.0, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 65.4, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 249.9, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 98.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 500.3, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 192.6, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 151.1, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 87.2, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 145.3, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7733.5, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 157.4, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 936.0, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 137.2, "ok": true}]
+2026-09-01 11:59:07 [INFO] [Sandbox5] PDF round 2 completed (11.57s)
+2026-09-01 11:59:07 [INFO] [CALLTIMINGS] [{"phase": "PDF-P01-inspect_prepare", "idx": 0, "fn": "read", "wall_ms": 66.6, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 1, "fn": "read", "wall_ms": 65.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 2, "fn": "read", "wall_ms": 103.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 3, "fn": "read", "wall_ms": 65.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 4, "fn": "read", "wall_ms": 64.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 5, "fn": "read", "wall_ms": 70.5, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 6, "fn": "read", "wall_ms": 65.8, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 7, "fn": "exec", "wall_ms": 63.7, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 8, "fn": "exec", "wall_ms": 241.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 9, "fn": "exec", "wall_ms": 65.1, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 10, "fn": "exec", "wall_ms": 245.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 11, "fn": "read", "wall_ms": 101.3, "ok": true}, {"phase": "PDF-P01-inspect_prepare", "idx": 12, "fn": "exec", "wall_ms": 496.9, "ok": true}, {"phase": "PDF-P02-build", "idx": 0, "fn": "write", "wall_ms": 194.6, "ok": true}, {"phase": "PDF-P02-build", "idx": 1, "fn": "exec", "wall_ms": 158.8, "ok": true}, {"phase": "PDF-P02-build", "idx": 2, "fn": "exec", "wall_ms": 85.4, "ok": true}, {"phase": "PDF-P02-build", "idx": 3, "fn": "write", "wall_ms": 145.8, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 0, "fn": "exec", "wall_ms": 7725.0, "ok": true}, {"phase": "PDF-P03-process_publish", "idx": 1, "fn": "write", "wall_ms": 157.8, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 0, "fn": "exec", "wall_ms": 940.1, "ok": true}, {"phase": "PDF-P04-verify_deliver", "idx": 1, "fn": "exec", "wall_ms": 138.5, "ok": true}]
+2026-09-01 11:59:07 [INFO] [Sandbox2] PDF round 2 completed (11.57s)
+2026-09-01 11:59:07 [INFO] [Sandbox3] PDF round 2 completed (11.57s)
+2026-09-01 11:59:07 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:07 [INFO] T+  40.4s  Status Snapshot
+2026-09-01 11:59:07 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:07 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:59:07 [INFO]   Document:   15/ 15  avg=11.47s  p99=11.57s
+2026-09-01 11:59:07 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:07 [INFO] [Round 2] Completed: 5 sandboxes, avg: PDF-P01-inspect_prepare=1691ms, PDF-P02-build=612ms, PDF-P03-process_publish=7922ms, PDF-P04-verify_deliver=1033ms
+2026-09-01 11:59:10 [INFO] 
+[RoundRobin] Completed 3 rounds in 43.4s
+2026-09-01 11:59:10 [INFO] 
+[Phase 6] Stopping...
+2026-09-01 11:59:10 [INFO] 
+──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:10 [INFO] T+  43.4s  Status Snapshot
+2026-09-01 11:59:10 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:10 [INFO]   Sandboxes:  10 ready /  0 offline
+2026-09-01 11:59:10 [INFO]   Document:   15/ 15  avg=11.47s  p99=11.57s
+2026-09-01 11:59:10 [INFO] ──────────────────────────────────────────────────────────────────────
+2026-09-01 11:59:12 [INFO] 
+Killing all containers...
+2026-09-01 11:59:18 [INFO] Killed 10 containers
+2026-09-01 11:59:19 [INFO] 
+================================================================================
+Sandbox Bench - Performance Report
+================================================================================
+
+[Test Configuration]
+  Backend:        docker
+  Total Sandboxes: 10
+  Workflow:        document
+  Document Case:   pdf
+  Mode:            Full workflow
+  Create Batch:    10 batches x 1 sandboxes
+  Create Interval: 3s
+  Task Batch:      10 batches x 1 sandboxes
+  Task Interval:   5s
+  Test Duration:   45s
+
+[Sandbox Status]
+  Created (API):       10 / 10
+  Command Ready:         10 / 10
+  Create Failed:       0
+  Ready Check Failed:   0
+  Offline (runtime):   0
+
+[Sandbox.create Performance]
+  (sandbox.create API call time, excluding ready check)
+  Min:  1.0s
+  Max:  1.4s
+  Avg:  1.2s
+  P50:  1.2s
+  P95:  1.4s
+  P99:  1.4s
+
+[Document Asset Check Performance]
+  (Running document-bench-validate inside the sandbox)
+  Min:  0.1s
+  Max:  0.2s
+  Avg:  0.2s
+  P50:  0.2s
+  P95:  0.2s
+  P99:  0.2s
+
+[Total Startup Performance]
+  (sandbox.create + ready check)
+  Min:  1.1s
+  Max:  1.6s
+  Avg:  1.4s
+  P50:  1.4s
+  P95:  1.6s
+  P99:  1.6s
+
+[Document Task Statistics]
+  Case Kind:     pdf
+  Total Tasks:   15
+  Success:       15
+  Failed:        0 (timeout: 0)
+  Success Rate:  100.0%
+  Avg Latency:   11467.3ms
+  P99 Latency:   11573.8ms
+
+[Step-Level Timing (Document PDF Mode)]
+Step                     Count  Avg(ms)  P50(ms)  P95(ms)  P99(ms)  Tail           
+-----------------------  -----  -------  -------  -------  -------  ---------------
+PDF-P01-inspect_prepare  15     1687.5   1680.9   1724.9   1724.9   1.03x (minimal)
+PDF-P02-build            15     571.1    574.8    664.5    664.5    1.16x (minimal)
+PDF-P03-process_publish  15     7919.9   7923.8   7964.0   7964.0   1.01x (minimal)
+PDF-P04-verify_deliver   15     1045.4   1069.2   1087.4   1087.4   1.02x (minimal)
+
+================================================================================
+[Round Comparison]
+================================================================================
+
+  Summary: 15 tasks across 3 rounds
+Round  Tasks  Success%  Avg(s)  P50(s)  P95(s)  P99(s)  Tail           
+-----  -----  --------  ------  ------  ------  ------  ---------------
+0      5      100.0     11.43   11.44   11.44   11.44   1.00x (minimal)
+1      5      100.0     11.40   11.40   11.40   11.40   1.00x (minimal)
+2      5      100.0     11.57   11.57   11.57   11.57   1.00x (minimal)
+
+================================================================================
+2026-09-01 11:59:19 [INFO] 
+Report saved to: results/document/pdf/document_pdf_bench_zng_20260901_115919.txt

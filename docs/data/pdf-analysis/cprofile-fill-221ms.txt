@@ -1,0 +1,27 @@
+
+one_fill median wall: 220.8ms
+         1874227 function calls (1835393 primitive calls) in 0.725 seconds
+
+   Ordered by: internal time
+   List reduced from 286 to 16 due to restriction <16>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    29111    0.052    0.000    0.093    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/_utils.py:245(read_until_regex)
+32531/906    0.052    0.000    0.383    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_data_structures.py:1478(read_object)
+  907/808    0.036    0.000    0.234    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_data_structures.py:240(read_from_stream)
+    64264    0.036    0.000    0.070    0.000 /usr/lib/python3.12/typing.py:1871(__instancecheck__)
+   220865    0.033    0.000    0.033    0.000 {method 'read' of '_io.BytesIO' objects}
+    24866    0.028    0.000    0.029    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_base.py:138(_reference_clone)
+   145649    0.024    0.000    0.024    0.000 {method 'seek' of '_io.BytesIO' objects}
+     7771    0.024    0.000    0.037    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_base.py:835(renumber)
+    78800    0.022    0.000    0.092    0.000 {built-in method builtins.isinstance}
+    900/5    0.021    0.000    0.402    0.080 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_data_structures.py:115(clone)
+    21384    0.021    0.000    0.101    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_base.py:585(read_from_stream)
+   125856    0.020    0.000    0.020    0.000 {method 'append' of 'list' objects}
+     7727    0.019    0.000    0.030    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_base.py:873(unnumber)
+    38047    0.017    0.000    0.025    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_base.py:544(__new__)
+ 1427/882    0.015    0.000    0.375    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_data_structures.py:552(read_from_stream)
+    18078    0.014    0.000    0.046    0.000 /usr/local/lib/python3.12/dist-packages/pypdf/generic/_base.py:551(clone)
+
+
+

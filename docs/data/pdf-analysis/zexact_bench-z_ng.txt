@@ -1,0 +1,2176 @@
+==_/tmp/zcount/105-other.log
+cmd=head pid=105
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/111-python.log
+cmd=python3 pid=111
+deflate    calls=3006 time_ms=51.2
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/112-other.log
+cmd=pdfinfo pid=112
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/113-other.log
+cmd=pdftoppm pid=113
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/114-other.log
+cmd=pdftoppm pid=114
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/121-other.log
+cmd=mkdir pid=121
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/127-python.log
+cmd=python3 pid=127
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/133-python.log
+cmd=python3 pid=133
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/139-python.log
+cmd=python3 pid=139
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/145-other.log
+cmd=mkdir pid=145
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/151-python.log
+cmd=python3 pid=151
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/157-python.log
+cmd=python3 pid=157
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/158-python.log
+cmd=python3 pid=158
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/159-python.log
+cmd=python3 pid=159
+deflate    calls=3005 time_ms=51.5
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/160-other.log
+cmd=pdfinfo pid=160
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/161-other.log
+cmd=pdftoppm pid=161
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/162-other.log
+cmd=pdftoppm pid=162
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/163-python.log
+cmd=python3 pid=163
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/164-python.log
+cmd=python3 pid=164
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/165-other.log
+cmd=pdfinfo pid=165
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/166-other.log
+cmd=pdftoppm pid=166
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/167-other.log
+cmd=pdftoppm pid=167
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/168-python.log
+cmd=python3 pid=168
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/169-python.log
+cmd=python3 pid=169
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/170-other.log
+cmd=pdfinfo pid=170
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/171-other.log
+cmd=pdftoppm pid=171
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/172-other.log
+cmd=pdftoppm pid=172
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/173-python.log
+cmd=python3 pid=173
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/174-python.log
+cmd=python3 pid=174
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/175-other.log
+cmd=pdfinfo pid=175
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/176-other.log
+cmd=pdftoppm pid=176
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/177-other.log
+cmd=pdftoppm pid=177
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/178-python.log
+cmd=python3 pid=178
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/179-python.log
+cmd=python3 pid=179
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/18-other.log
+cmd=rm pid=18
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/180-other.log
+cmd=pdfinfo pid=180
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/181-other.log
+cmd=pdftoppm pid=181
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/182-other.log
+cmd=pdftoppm pid=182
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/183-python.log
+cmd=python3 pid=183
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/184-python.log
+cmd=python3 pid=184
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/185-other.log
+cmd=pdfinfo pid=185
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/186-other.log
+cmd=pdftoppm pid=186
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/187-other.log
+cmd=pdftoppm pid=187
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/188-python.log
+cmd=python3 pid=188
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/189-python.log
+cmd=python3 pid=189
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/190-other.log
+cmd=pdfinfo pid=190
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/191-other.log
+cmd=pdftoppm pid=191
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/192-other.log
+cmd=pdftoppm pid=192
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/193-python.log
+cmd=python3 pid=193
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/194-python.log
+cmd=python3 pid=194
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/195-other.log
+cmd=pdfinfo pid=195
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/196-other.log
+cmd=pdftoppm pid=196
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/197-other.log
+cmd=pdftoppm pid=197
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/198-python.log
+cmd=python3 pid=198
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/199-python.log
+cmd=python3 pid=199
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/200-other.log
+cmd=pdfinfo pid=200
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/201-other.log
+cmd=pdftoppm pid=201
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/202-other.log
+cmd=pdftoppm pid=202
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/203-python.log
+cmd=python3 pid=203
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/204-python.log
+cmd=python3 pid=204
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/205-other.log
+cmd=pdfinfo pid=205
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/206-other.log
+cmd=pdftoppm pid=206
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/207-other.log
+cmd=pdftoppm pid=207
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/213-other.log
+cmd=mkdir pid=213
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/219-python.log
+cmd=python3 pid=219
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/225-python.log
+cmd=python3 pid=225
+deflate    calls=0 time_ms=0.0
+inflate    calls=20132 time_ms=48.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=40 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/231-other.log
+cmd=find pid=231
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/232-other.log
+cmd=sort pid=232
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/233-other.log
+cmd=find pid=233
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/234-other.log
+cmd=wc pid=234
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/235-other.log
+cmd=ls pid=235
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/236-other.log
+cmd=wc pid=236
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/237-other.log
+cmd=ls pid=237
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/238-other.log
+cmd=wc pid=238
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/239-python.log
+cmd=python3 pid=239
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/24-python.log
+cmd=python3 pid=24
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/245-python.log
+cmd=python3 pid=245
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/251-other.log
+cmd=mkdir pid=251
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/252-other.log
+cmd=rm pid=252
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/253-other.log
+cmd=cp pid=253
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/254-other.log
+cmd=mkdir pid=254
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/260-other.log
+cmd=head pid=260
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/266-other.log
+cmd=head pid=266
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/272-other.log
+cmd=head pid=272
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/278-other.log
+cmd=head pid=278
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/284-other.log
+cmd=head pid=284
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/290-other.log
+cmd=head pid=290
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/296-other.log
+cmd=head pid=296
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/30-other.log
+cmd=mkdir pid=30
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/302-other.log
+cmd=mkdir pid=302
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/308-python.log
+cmd=python3 pid=308
+deflate    calls=0 time_ms=0.0
+inflate    calls=11 time_ms=0.3
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/31-other.log
+cmd=rm pid=31
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/314-other.log
+cmd=cat pid=314
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/32-other.log
+cmd=cp pid=32
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/320-python.log
+cmd=python3 pid=320
+deflate    calls=0 time_ms=0.0
+inflate    calls=14 time_ms=0.3
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/326-other.log
+cmd=head pid=326
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/33-other.log
+cmd=mkdir pid=33
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/332-python.log
+cmd=python3 pid=332
+deflate    calls=3006 time_ms=51.1
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/333-other.log
+cmd=pdfinfo pid=333
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/334-other.log
+cmd=pdftoppm pid=334
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/335-other.log
+cmd=pdftoppm pid=335
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/341-other.log
+cmd=mkdir pid=341
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/347-python.log
+cmd=python3 pid=347
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/353-python.log
+cmd=python3 pid=353
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/359-python.log
+cmd=python3 pid=359
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/365-other.log
+cmd=mkdir pid=365
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/371-python.log
+cmd=python3 pid=371
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/377-python.log
+cmd=python3 pid=377
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/378-python.log
+cmd=python3 pid=378
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/379-python.log
+cmd=python3 pid=379
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/380-other.log
+cmd=pdfinfo pid=380
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/381-other.log
+cmd=pdftoppm pid=381
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/382-other.log
+cmd=pdftoppm pid=382
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/383-python.log
+cmd=python3 pid=383
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/384-python.log
+cmd=python3 pid=384
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/385-other.log
+cmd=pdfinfo pid=385
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/386-other.log
+cmd=pdftoppm pid=386
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/387-other.log
+cmd=pdftoppm pid=387
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/388-python.log
+cmd=python3 pid=388
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/389-python.log
+cmd=python3 pid=389
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/39-other.log
+cmd=head pid=39
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/390-other.log
+cmd=pdfinfo pid=390
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/391-other.log
+cmd=pdftoppm pid=391
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/392-other.log
+cmd=pdftoppm pid=392
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/393-python.log
+cmd=python3 pid=393
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/394-python.log
+cmd=python3 pid=394
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/395-other.log
+cmd=pdfinfo pid=395
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/396-other.log
+cmd=pdftoppm pid=396
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/397-other.log
+cmd=pdftoppm pid=397
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/398-python.log
+cmd=python3 pid=398
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/399-python.log
+cmd=python3 pid=399
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/400-other.log
+cmd=pdfinfo pid=400
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/401-other.log
+cmd=pdftoppm pid=401
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/402-other.log
+cmd=pdftoppm pid=402
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/403-python.log
+cmd=python3 pid=403
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/404-python.log
+cmd=python3 pid=404
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/405-other.log
+cmd=pdfinfo pid=405
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/406-other.log
+cmd=pdftoppm pid=406
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/407-other.log
+cmd=pdftoppm pid=407
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/408-python.log
+cmd=python3 pid=408
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/409-python.log
+cmd=python3 pid=409
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/410-other.log
+cmd=pdfinfo pid=410
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/411-other.log
+cmd=pdftoppm pid=411
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/412-other.log
+cmd=pdftoppm pid=412
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/413-python.log
+cmd=python3 pid=413
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/414-python.log
+cmd=python3 pid=414
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/415-other.log
+cmd=pdfinfo pid=415
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/416-other.log
+cmd=pdftoppm pid=416
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/417-other.log
+cmd=pdftoppm pid=417
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/418-python.log
+cmd=python3 pid=418
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/419-python.log
+cmd=python3 pid=419
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/420-other.log
+cmd=pdfinfo pid=420
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/421-other.log
+cmd=pdftoppm pid=421
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/422-other.log
+cmd=pdftoppm pid=422
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/423-python.log
+cmd=python3 pid=423
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/424-python.log
+cmd=python3 pid=424
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/425-other.log
+cmd=pdfinfo pid=425
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/426-other.log
+cmd=pdftoppm pid=426
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/427-other.log
+cmd=pdftoppm pid=427
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/433-other.log
+cmd=mkdir pid=433
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/439-python.log
+cmd=python3 pid=439
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/445-python.log
+cmd=python3 pid=445
+deflate    calls=0 time_ms=0.0
+inflate    calls=20132 time_ms=47.9
+adler32    calls=0 time_ms=0.0
+crc32      calls=40 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/45-other.log
+cmd=head pid=45
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/451-other.log
+cmd=find pid=451
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/452-other.log
+cmd=sort pid=452
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/453-other.log
+cmd=find pid=453
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/454-other.log
+cmd=wc pid=454
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/455-other.log
+cmd=ls pid=455
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/456-other.log
+cmd=wc pid=456
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/457-other.log
+cmd=ls pid=457
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/458-other.log
+cmd=wc pid=458
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/459-python.log
+cmd=python3 pid=459
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/465-python.log
+cmd=python3 pid=465
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/471-other.log
+cmd=mkdir pid=471
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/472-other.log
+cmd=rm pid=472
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/473-other.log
+cmd=cp pid=473
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/474-other.log
+cmd=mkdir pid=474
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/480-other.log
+cmd=head pid=480
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/486-other.log
+cmd=head pid=486
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/492-other.log
+cmd=head pid=492
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/498-other.log
+cmd=head pid=498
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/504-other.log
+cmd=head pid=504
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/51-other.log
+cmd=head pid=51
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/511-other.log
+cmd=head pid=511
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/517-other.log
+cmd=head pid=517
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/523-other.log
+cmd=mkdir pid=523
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/529-python.log
+cmd=python3 pid=529
+deflate    calls=0 time_ms=0.0
+inflate    calls=11 time_ms=0.3
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/535-other.log
+cmd=cat pid=535
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/541-python.log
+cmd=python3 pid=541
+deflate    calls=0 time_ms=0.0
+inflate    calls=14 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/548-other.log
+cmd=head pid=548
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/554-python.log
+cmd=python3 pid=554
+deflate    calls=3006 time_ms=51.1
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/555-other.log
+cmd=pdfinfo pid=555
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/556-other.log
+cmd=pdftoppm pid=556
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/557-other.log
+cmd=pdftoppm pid=557
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/563-other.log
+cmd=mkdir pid=563
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/569-python.log
+cmd=python3 pid=569
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/57-other.log
+cmd=head pid=57
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/575-python.log
+cmd=python3 pid=575
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/581-python.log
+cmd=python3 pid=581
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/587-other.log
+cmd=mkdir pid=587
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/593-python.log
+cmd=python3 pid=593
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/599-python.log
+cmd=python3 pid=599
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/600-python.log
+cmd=python3 pid=600
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/601-python.log
+cmd=python3 pid=601
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/602-other.log
+cmd=pdfinfo pid=602
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/603-other.log
+cmd=pdftoppm pid=603
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/604-other.log
+cmd=pdftoppm pid=604
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/605-python.log
+cmd=python3 pid=605
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/606-python.log
+cmd=python3 pid=606
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/607-other.log
+cmd=pdfinfo pid=607
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/608-other.log
+cmd=pdftoppm pid=608
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/609-other.log
+cmd=pdftoppm pid=609
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/610-python.log
+cmd=python3 pid=610
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/611-python.log
+cmd=python3 pid=611
+deflate    calls=3005 time_ms=51.5
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/612-other.log
+cmd=pdfinfo pid=612
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/613-other.log
+cmd=pdftoppm pid=613
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/614-other.log
+cmd=pdftoppm pid=614
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/615-python.log
+cmd=python3 pid=615
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/616-python.log
+cmd=python3 pid=616
+deflate    calls=3005 time_ms=51.5
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/617-other.log
+cmd=pdfinfo pid=617
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/618-other.log
+cmd=pdftoppm pid=618
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/619-other.log
+cmd=pdftoppm pid=619
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/620-python.log
+cmd=python3 pid=620
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/621-python.log
+cmd=python3 pid=621
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/622-other.log
+cmd=pdfinfo pid=622
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/623-other.log
+cmd=pdftoppm pid=623
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/624-other.log
+cmd=pdftoppm pid=624
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/625-python.log
+cmd=python3 pid=625
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/626-python.log
+cmd=python3 pid=626
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/627-other.log
+cmd=pdfinfo pid=627
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/628-other.log
+cmd=pdftoppm pid=628
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/629-other.log
+cmd=pdftoppm pid=629
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/63-other.log
+cmd=head pid=63
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/630-python.log
+cmd=python3 pid=630
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/631-python.log
+cmd=python3 pid=631
+deflate    calls=3005 time_ms=51.5
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/632-other.log
+cmd=pdfinfo pid=632
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/633-other.log
+cmd=pdftoppm pid=633
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/634-other.log
+cmd=pdftoppm pid=634
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/635-python.log
+cmd=python3 pid=635
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/636-python.log
+cmd=python3 pid=636
+deflate    calls=3005 time_ms=51.7
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/637-other.log
+cmd=pdfinfo pid=637
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/638-other.log
+cmd=pdftoppm pid=638
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/639-other.log
+cmd=pdftoppm pid=639
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/640-python.log
+cmd=python3 pid=640
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/641-python.log
+cmd=python3 pid=641
+deflate    calls=3005 time_ms=51.6
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/642-other.log
+cmd=pdfinfo pid=642
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/643-other.log
+cmd=pdftoppm pid=643
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/644-other.log
+cmd=pdftoppm pid=644
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/645-python.log
+cmd=python3 pid=645
+deflate    calls=0 time_ms=0.0
+inflate    calls=19 time_ms=0.4
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/646-python.log
+cmd=python3 pid=646
+deflate    calls=3005 time_ms=51.8
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=56 time_ms=0.1
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/647-other.log
+cmd=pdfinfo pid=647
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/648-other.log
+cmd=pdftoppm pid=648
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/649-other.log
+cmd=pdftoppm pid=649
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/655-other.log
+cmd=mkdir pid=655
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/661-python.log
+cmd=python3 pid=661
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/667-python.log
+cmd=python3 pid=667
+deflate    calls=0 time_ms=0.0
+inflate    calls=20132 time_ms=47.9
+adler32    calls=0 time_ms=0.0
+crc32      calls=40 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/673-other.log
+cmd=find pid=673
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/674-other.log
+cmd=sort pid=674
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/675-other.log
+cmd=find pid=675
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/676-other.log
+cmd=wc pid=676
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/677-other.log
+cmd=ls pid=677
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/678-other.log
+cmd=wc pid=678
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/679-other.log
+cmd=ls pid=679
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/680-other.log
+cmd=wc pid=680
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/681-python.log
+cmd=python3 pid=681
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/687-python.log
+cmd=python3 pid=687
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/69-other.log
+cmd=head pid=69
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/75-other.log
+cmd=head pid=75
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/81-other.log
+cmd=mkdir pid=81
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/87-python.log
+cmd=python3 pid=87
+deflate    calls=0 time_ms=0.0
+inflate    calls=11 time_ms=0.3
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/93-other.log
+cmd=cat pid=93
+deflate    calls=0 time_ms=0.0
+inflate    calls=0 time_ms=0.0
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0
+==_/tmp/zcount/99-python.log
+cmd=python3 pid=99
+deflate    calls=0 time_ms=0.0
+inflate    calls=14 time_ms=0.3
+adler32    calls=0 time_ms=0.0
+crc32      calls=0 time_ms=0.0
+compress2  calls=0 time_ms=0.0
+uncompress calls=0 time_ms=0.0

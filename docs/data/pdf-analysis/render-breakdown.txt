@@ -1,0 +1,5 @@
+
+  page1: PPM load 6ms + PNG save 165ms
+  page2: PPM load 6ms + PNG save 147ms
+  page3: PPM load 5ms + PNG save 141ms
+pdftoppm(3页): 154ms | PIL load+save 合计: 469ms | render 总计: 623ms
