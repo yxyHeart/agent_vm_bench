@@ -1,0 +1,77 @@
+================================================================================
+Sandbox Bench - Performance Report
+================================================================================
+
+[Test Configuration]
+  Backend:        docker
+  Total Sandboxes: 1
+  Workflow:        document
+  Document Case:   xlsx
+  Mode:            Full workflow
+  Create Batch:    1 batches x 10 sandboxes
+  Create Interval: 3s
+  Task Batch:      1 batches x 5 sandboxes
+  Task Interval:   5s
+  Test Duration:   160s
+
+[Sandbox Status]
+  Created (API):       1 / 1
+  Command Ready:         1 / 1
+  Create Failed:       0
+  Ready Check Failed:   0
+  Offline (runtime):   0
+
+[Sandbox.create Performance]
+  (sandbox.create API call time, excluding ready check)
+  Min:  1.0s
+  Max:  1.0s
+  Avg:  1.0s
+  P50:  1.0s
+  P95:  1.0s
+  P99:  1.0s
+
+[Document Asset Check Performance]
+  (Running document-bench-validate inside the sandbox)
+  Min:  0.2s
+  Max:  0.2s
+  Avg:  0.2s
+  P50:  0.2s
+  P95:  0.2s
+  P99:  0.2s
+
+[Total Startup Performance]
+  (sandbox.create + ready check)
+  Min:  1.2s
+  Max:  1.2s
+  Avg:  1.2s
+  P50:  1.2s
+  P95:  1.2s
+  P99:  1.2s
+
+[Document Task Statistics]
+  Case Kind:     xlsx
+  Total Tasks:   1
+  Success:       1
+  Failed:        0 (timeout: 0)
+  Success Rate:  100.0%
+  Avg Latency:   257472.3ms
+  P99 Latency:   257472.3ms
+
+[Step-Level Timing (Document XLSX Mode)]
+Step                      Count  Avg(ms)   P50(ms)   P95(ms)   P99(ms)   Tail           
+------------------------  -----  --------  --------  --------  --------  ---------------
+XLSX-P01-inspect_prepare  1      55859.5   55859.5   55859.5   55859.5   1.00x (minimal)
+XLSX-P02-build            1      51112.3   51112.3   51112.3   51112.3   1.00x (minimal)
+XLSX-P03-process_publish  1      105204.9  105204.9  105204.9  105204.9  1.00x (minimal)
+XLSX-P04-verify_deliver   1      45079.3   45079.3   45079.3   45079.3   1.00x (minimal)
+
+================================================================================
+[Round Comparison]
+================================================================================
+
+  Summary: 1 tasks across 1 rounds
+Round  Tasks  Success%  Avg(s)  P50(s)  P95(s)  P99(s)  Tail           
+-----  -----  --------  ------  ------  ------  ------  ---------------
+0      1      100.0     257.47  257.47  257.47  257.47  1.00x (minimal)
+
+================================================================================
