@@ -253,6 +253,14 @@ zlib 内部节省 845ms 约占 E2E 节省 1.06s 的 80%, 两个口径 (探针计
 - **`flame-diff.svg`**: 差分图, zlib 叶帧 -29.7% (纯蓝); fill 侧 (pypdf 读/克隆) 两侧持平, 证明收益全部来自 zlib 替换。
 - `flame-full-before/after.svg`: 全景 (含 fill 路径上下文)。
 
+**读图分析**:
+
+1. **优化前 (`png-zlib-before.svg`)**: PNG 编码路径 1,443 样本中 libz 占 945 (**65%**), Pillow 胶水 (逐 tile 的 `_encode_tile` 调度与编码回调) 占 34%。libz 内部因发行版剥离符号呈单一暗块 (`libz内部(符号剥离)`) 无法细分——只有自编译的 zlib-ng 才能看清内部结构。
+2. **优化后 (`png-zlib-after.svg`)**: libz 缩至 475 样本 (**-50%**), 内部结构可见 (按含该帧的样本计数, 嵌套计): 主压缩循环 `deflate_medium` 贯穿 ~100% 的 zlib 样本, 其中 **~40% 位于 NEON 向量化的最长匹配 `longest_match_neon`**, **~34% 位于哈希插入 `insert_string`/`quick_insert_string`**, 其余为 `zng_tr_flush_block`/`compress_block`/`fill_window`/`slide_hash_neon` 等落盘与簿记。收益落点与本节机制解释吻合: 匹配查找向量化 + 哈希管理现代化。
+3. **差分 (`flame-diff.svg`)**: 唯一大蓝块是 zlib 叶帧; 全部红帧 ≤ +0.95% (pypdf fill 侧 605→638, 采样噪声量级)。单变量替换 (只换 libz) 下, 时间减少精确发生在被替换的库内, 未触碰路径零回归、无新增开销——E2E 收益的因果链闭合。
+4. **交叉验证**: 火焰图口径 zlib -49.7% vs zcount 探针口径 deflate 内部 -57% (1,326→568ms), 两种独立测量 (采样 vs 拦截计时) 方向与量级一致。
+5. **剩余天花板**: 优化后 PNG 路径中 Pillow 胶水占 47% (428/906) 已反超 libz (52%)——该路径继续提速需改动 Pillow 编码调度 (超出零侵入约束), libz 侧余量已小。
+
 ### 4.2 pypdf 协议继承移除
 
 #### 背景
