@@ -23,11 +23,11 @@
 
 ### P03-process_publish (8,528ms → 2,228ms, -74%)
 
-| 对象 | 优化前 | 优化后 | 变化 |
+| 对象 | 优化前 | 优化后 | 关键帧变化 |
 |------|--------|--------|------|
-| 单次 fill | ![fill baseline](flames/pdf_opt/png/baseline_fill_baseline.png) | ![P03 main](flames/pdf_opt/png/P03_main.png) | 导入帧 36.4%→**0** (进程合并); 解析 10 次→1 次; `clone` 仍 69% 为剩余瓶颈 |
-| 单次 render | ![render baseline](flames/pdf_opt/png/baseline_render_baseline.png) | ![P03 pool](flames/pdf_opt/png/P03_pool1.png) | 压缩帧(cl=6) 50% 归零, 渲染 429ms→156ms 且移入独立进程; pool worker 仅剩队列管理帧 |
-| 整体形态 | (串行: fill→render 交替) | ![P03 all](flames/pdf_opt/png/P03_optimized_all.png) | 主进程 fill 与 pool 进程 render 时间线重叠 —— 双核流水线生效 |
+| 单次 fill | ![fill baseline](flames/pdf_opt/png/baseline_fill_baseline.png) | ![P03 main](flames/pdf_opt/png/P03_main.png) | 浪费帧全部消失: 导入链 `_find_and_load`/`exec_module` **36.4%→0**, `get_field_info` 重复解析 **10%→0.9%**; 剩余全是真实工作帧: `clone_document_from_reader` 40%→69%、`write` 12.7%→25.6% (绝对耗时未变, 占比升高=水分挤干) |
+| 单次 render | ![render baseline](flames/pdf_opt/png/baseline_render_baseline.png) | ![P03 pool](flames/pdf_opt/png/P03_pool1.png) | 优化前帧: `save`→`_save`→`_encode_tile` (PIL cl=6 压缩链) 50%、`resize` 30%; 优化后主进程这两条帧**归零** —— 压缩改为 `_fast_png_save` (cl=1) 且移入 pool worker 进程, 单次渲染 429ms→156ms; worker 图中仅剩 `ProcessPoolExecutor.submit`/`_launch_processes` 等队列管理帧, 证明渲染在另一核执行 |
+| 整体形态 | (串行: fill→render 交替) | ![P03 all](flames/pdf_opt/png/P03_optimized_all.png) | 同一张图里两条并行栈: 主进程 `_run_fill` (pypdf `clone`/`write`) 与 pool 进程 `_save_native`→`_fast_png_save` (28%) 时间线重叠 —— 双核流水线生效 |
 
 ### P04-verify_deliver (1,074ms → 1,016ms, 持平·冻结区)
 
