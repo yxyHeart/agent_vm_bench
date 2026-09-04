@@ -1,0 +1,11 @@
+# Combined image: base + speedups (3 files) + disk-cache (2 files).
+# Build the .so first (see speedups/build.sh), then:
+#   docker build -t ubuntu-document-bench:xlsx-combo -f Dockerfile.combo \
+#     ../speedups ../../build-gen/speedups 2>/dev/null || docker build -t ubuntu-document-bench:xlsx-combo -f Dockerfile.combo .
+# Files required next to this Dockerfile:
+#   openpyxl_speedups.cpython-312-aarch64-linux-gnu.so (from speedups/build.sh)
+#   oxlspeed_bootstrap.py, oxlspeed.pth                 (copy from speedups/)
+#   openpyxl_cache.py, oxlcache.pth                     (copy from disk-cache/)
+FROM ubuntu-document-bench:24.04-linuxarm64
+COPY openpyxl_speedups.cpython-312-aarch64-linux-gnu.so oxlspeed_bootstrap.py oxlspeed.pth /usr/local/lib/python3.12/dist-packages/
+COPY openpyxl_cache.py oxlcache.pth /usr/local/lib/python3.12/dist-packages/
