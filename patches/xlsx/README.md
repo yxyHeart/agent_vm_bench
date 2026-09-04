@@ -29,14 +29,17 @@ XLSX 文档基准的全部优化产物, 按状态分档: `active/`(在用)、`ar
 
 ### 组合镜像(推荐)
 
-Dockerfile: [`Dockerfile.combo`](Dockerfile.combo)(基础镜像 + 两方案共 5 个文件)
+Dockerfile: [`Dockerfile.combo`](Dockerfile.combo) — **单命令构建**,编译(.so)在 builder 阶段内完成(apt cython3 + gcc + python3.12-dev),无需宿主工具链、无需手工拷文件:
 
-```dockerfile
-FROM ubuntu-document-bench:24.04-linuxarm64
-COPY openpyxl_speedups.cpython-312-aarch64-linux-gnu.so oxlspeed_bootstrap.py oxlspeed.pth \
-     /usr/local/lib/python3.12/dist-packages/
-COPY openpyxl_cache.py oxlcache.pth /usr/local/lib/python3.12/dist-packages/
+```bash
+docker build --network=host -t ubuntu-document-bench:xlsx-combo \
+  -f patches/xlsx/active/Dockerfile.combo patches/xlsx/active/
+# --network=host: 容器默认网桥无 DNS 时 apt 需走宿主网络(920B 实测必须)
+# 前提: 基础镜像 ubuntu-document-bench:24.04-linuxarm64 已在本地
 ```
+
+镜像内容 = 基础镜像 + 两方案共 5 个注入文件(speedups 3 + cache 2)。
+已验证与分步构建的参考镜像等价: E2E 143.7s vs 143.0s(2 任务均值, 2026-09-04)。
 
 组合 E2E: **257.5 → 143.0s(-44.5%, 均值; 冷对冷 153.0s/-40.6%)**, Success 2/2; 重复加载调用降至 5~9s(命中重建 ~4s)。
 配置: `config/common/document-xlsx-combo.yaml`。
@@ -61,9 +64,9 @@ v1-v3 中间轮次与调试遗留已清; 可继承部分(磁盘缓存/GC/直填)
 ## 复现
 
 ```bash
-# speedups 扩展编译(宿主需 cython + python3.12 头文件)
-bash patches/xlsx/active/speedups/build.sh
-# 组合镜像 = 基础镜像 + 两方案共 5 个文件(见上 Dockerfile)
+# 组合镜像 = 一条命令(编译内置于 builder 阶段, 见上节 Dockerfile.combo)
+docker build --network=host -t ubuntu-document-bench:xlsx-combo \
+  -f patches/xlsx/active/Dockerfile.combo patches/xlsx/active/
 bench-core --provider docker --config config/common/document-xlsx-combo.yaml -n 1   # 143.0s (均值口径)
 bench-core --provider docker --config config/common/document-xlsx-speedups.yaml -n 1 # 217.0s (仅 speedups)
 ```

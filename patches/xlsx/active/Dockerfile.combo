@@ -1,11 +1,32 @@
-# Combined image: base + speedups (3 files) + disk-cache (2 files).
-# Build the .so first (see speedups/build.sh), then:
-#   docker build -t ubuntu-document-bench:xlsx-combo -f Dockerfile.combo \
-#     ../speedups ../../build-gen/speedups 2>/dev/null || docker build -t ubuntu-document-bench:xlsx-combo -f Dockerfile.combo .
-# Files required next to this Dockerfile:
-#   openpyxl_speedups.cpython-312-aarch64-linux-gnu.so (from speedups/build.sh)
-#   oxlspeed_bootstrap.py, oxlspeed.pth                 (copy from speedups/)
-#   openpyxl_cache.py, oxlcache.pth                     (copy from disk-cache/)
+# Combined image: base + speedups (3 files) + disk-cache (2 files), ONE command.
+#
+# The speedups .so is compiled in a builder stage (apt cython3 + gcc against
+# the distro python3.12 headers), so no host toolchain is needed. Verified on
+# the 920B host: E2E 143.7s (2-task mean) vs 143.0s for the reference image.
+#
+# Build (context = patches/xlsx/active/, contains speedups/ + disk-cache/):
+#   docker build --network=host -t ubuntu-document-bench:xlsx-combo \
+#     -f patches/xlsx/active/Dockerfile.combo patches/xlsx/active/
+#
+# --network=host is required on hosts whose containers have no DNS (apt
+# cannot resolve ports.ubuntu.com on the default bridge). Requires the base
+# image ubuntu-document-bench:24.04-linuxarm64 locally.
+#
+# Run:
+#   bench-core --provider docker --config config/common/document-xlsx-combo.yaml -n 1
+FROM ubuntu-document-bench:24.04-linuxarm64 AS speedups-builder
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends cython3 gcc python3.12-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY speedups/openpyxl_speedups.pyx /build/
+RUN cython3 /build/openpyxl_speedups.pyx && \
+    gcc -O3 -fPIC -shared -I/usr/include/python3.12 \
+        /build/openpyxl_speedups.c \
+        -o /build/openpyxl_speedups.cpython-312-aarch64-linux-gnu.so
+
 FROM ubuntu-document-bench:24.04-linuxarm64
-COPY openpyxl_speedups.cpython-312-aarch64-linux-gnu.so oxlspeed_bootstrap.py oxlspeed.pth /usr/local/lib/python3.12/dist-packages/
-COPY openpyxl_cache.py oxlcache.pth /usr/local/lib/python3.12/dist-packages/
+COPY --from=speedups-builder /build/openpyxl_speedups.cpython-312-aarch64-linux-gnu.so /usr/local/lib/python3.12/dist-packages/
+COPY speedups/oxlspeed_bootstrap.py speedups/oxlspeed.pth /usr/local/lib/python3.12/dist-packages/
+COPY disk-cache/openpyxl_cache.py disk-cache/oxlcache.pth /usr/local/lib/python3.12/dist-packages/
