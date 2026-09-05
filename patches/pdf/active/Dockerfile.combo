@@ -1,0 +1,45 @@
+# Combined PDF image: base + zlib-ng + pypdf protocol patch, ONE command.
+#
+# zlib-ng is source-built in a builder stage (cmake/ninja against the distro
+# toolchain), the pypdf protocol patch is applied in-place (2-line sed +
+# assertions). This reproduces the pdf-generic v3 image (E2E 11.98 -> 10.96s,
+# -8.5%: zlib-ng ~-800ms + protocol patch ~-220ms, 100% task success).
+#
+# Build (context = patches/pdf/active/, contains zlib-ng/ + pypdf-protocol-patch/
+# and needs zlib-ng-2.2.4.tar.gz next to the zlib-ng Dockerfile, j 机 ~/pdfbuild/):
+#   docker build --network=host -t ubuntu-document-bench:pdf-generic \
+#     -f patches/pdf/active/Dockerfile.combo patches/pdf/active/
+#
+# --network=host is required on hosts whose containers have no DNS (apt cannot
+# resolve repo.huaweicloud.com on the default bridge). Requires the base image
+# ubuntu-document-bench:24.04-linuxarm64 locally.
+#
+# Rollback: drop ENV LD_PRELOAD -> zlib reverts; re-run runtime-setup.sh
+# reversed -> pypdf reverts. Both are invisible to workload scripts.
+FROM ubuntu-document-bench:24.04-linuxarm64 AS zlib-ng-builder
+
+RUN sed -i "s|ports.ubuntu.com/ubuntu-ports|repo.huaweicloud.com/ubuntu-ports|g" /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true; \
+    apt-get update && apt-get install -y --no-install-recommends build-essential cmake ninja-build && rm -rf /var/lib/apt/lists/*
+COPY zlib-ng/zlib-ng-2.2.4.tar.gz /src/
+RUN cd /src && tar xf zlib-ng-2.2.4.tar.gz && cd zlib-ng-2.2.4 && \
+    sed -i '/add_subdirectory(test)/d' CMakeLists.txt && mkdir build && cd build && \
+    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_C_FLAGS="-O3 -mcpu=tsv110 -fPIC" -DZLIB_COMPAT=ON -DWITH_OPTIM=ON \
+        -DCMAKE_INSTALL_PREFIX=/out/zlib-ng -DBUILD_TESTING=OFF \
+        .. > /tmp/cm.log 2>&1 && ninja -j"$(nproc)" install > /tmp/mk.log 2>&1 && \
+    find /out/zlib-ng -name "libz.so*"
+
+FROM ubuntu-document-bench:24.04-linuxarm64
+COPY --from=zlib-ng-builder /out/zlib-ng /opt/zlib-ng
+COPY pypdf-protocol-patch/runtime-setup.sh /runtime-setup.sh
+ENV LD_PRELOAD=/opt/zlib-ng/lib/libz.so.1
+RUN chmod +x /runtime-setup.sh && /runtime-setup.sh && \
+    python3 - <<'PYEOF'
+import zlib
+with open("/proc/self/maps") as f:
+    libs = sorted({l.split()[-1] for l in f if "libz.so" in l})
+assert any("/opt/zlib-ng/" in l for l in libs), libs
+blob = b"hello world" * 10000
+assert zlib.decompress(zlib.compress(blob)) == blob
+print("zlib-ng ACTIVE:", libs[0])
+PYEOF
