@@ -1,6 +1,6 @@
 # 生产镜像: vanilla + 源码编译的 zlib-ng (zlib-compat, LD_PRELOAD 系统级替换)
 # 构建上下文 = 本目录, 需放 zlib-ng-2.2.4.tar.gz 源码包 (j 机 ~/pdfbuild/)
-# docker build -t ubuntu-document-bench:pdf-generic .
+# docker build -t ubuntu-document-bench:pdf-zng .
 
 FROM ubuntu-document-bench:24.04-linuxarm64 AS build
 RUN sed -i "s|ports.ubuntu.com/ubuntu-ports|repo.huaweicloud.com/ubuntu-ports|g" /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true; \

@@ -280,6 +280,8 @@ cProfile 热点第 2 名: 每次 clone 执行 **62,676 次 `typing._ProtocolMeta
 
 正确性: 冻结业务脚本 (`fill_fillable_fields.py`) 输出与补丁前 **md5 逐字节一致**。
 
+> 状态: 已恢复启用——与 zlib-ng 组合的生产镜像 `pdf-generic` v3 见 `patches/pdf/active/pypdf-protocol-patch/` 与 roadmap §六 (组合 E2E 11.98→10.96s, -8.5%)。
+
 ### 4.3 未成功的探索
 
 | 探索 | 结果 | 原因分析 |
@@ -291,6 +293,6 @@ cProfile 热点第 2 名: 每次 clone 执行 **62,676 次 `typing._ProtocolMeta
 
 ## 五、结论与下一步
 
-1. **通用约束下 (只动底层库与 CPU 层, 零 workflow 侵入)**: 同窗 A/B 实测 **12.28 → 11.22s (-8.63%)**, 唯一有效项 = zlib-ng 系统压缩库替换 (旧窗口基线 11.997s 与本 A/B 不混用); pypdf 协议补丁单独实测另提供 -0.22s (11.18→10.96s), 已归档 (维护成本高于收益)。
+1. **通用约束下 (只动底层库与 CPU 层, 零 workflow 侵入)**: 同窗 A/B 实测 **12.28 → 11.22s (-8.63%)**, 唯一有效项 = zlib-ng 系统压缩库替换 (旧窗口基线 11.997s 与本 A/B 不混用); pypdf 协议补丁叠加另提供 -0.22s (11.18→10.96s), 已恢复启用并与 zlib-ng 组合为生产镜像 v3 (`pdf-generic`, 组合 -8.5%)。
 2. **排雷结论**: SVE (当前硬件)、/dev/shm、增量写入、Cython 自动编译四条路线全部以严格 A/B 关闭, 避免后续在死路投入。
 3. **下一步已论证的空间**: pypdf 解析/序列化的窄接口 C 扩展下沉 (cProfile 已完整定义规格: `read_object` 词法循环 + 62K isinstance + 358K 次 BytesIO 微调用), 阶段目标 clone 176→100~130ms; 串行 fill/render 结构成本在通用约束下不可回收。
