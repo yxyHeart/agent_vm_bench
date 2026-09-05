@@ -24,13 +24,18 @@ defined_names + 外链数, 汇总 sha256:
 
 ### 第 2 层: 保存产物(openpyxl save, TP-07 路径) — 除固有易变成员外逐字节一致
 
-`save.py` 对 zip 内全部成员取 md5(save_A1/A2/C.txt):
+`save.py` 对 zip 内全部成员取 md5(save_A1/A2/C.txt), `save_matrix.sh` 补全三路矩阵并
+**显式证明缓存命中**(save_matrix.log):
 
 - **stock 自身对照**(连续两次 save): 23 个成员恰 1 个不同 = `docProps/core.xml`,
   差异仅为 `<dcterms:modified>` 墙钟时间(02:56:32Z vs 02:57:23Z) — openpyxl 每次
   save 写当前时间, 与优化无关(对照组隔离了该变量)。
-- **stock vs 组合 HIT save**: 同样仅该成员不同, 其余 22 个成员(含 123MB sheet1.xml/
-  styles/charts/drawings)md5 全同。
+- **三路保存矩阵**(save_matrix.sh, 开 `OPENPYXL_CACHE_DEBUG=1`): 无缓存 stock /
+  无缓存 speedups(MISS 解析) / **缓存命中 combo** 两两对比, 均仅 `docProps/core.xml`
+  时间戳不同, 其余 22 个成员(含 123MB sheet1.xml/styles/charts/drawings)md5 全同。
+  combo 侧 debug 日志 `[oxlcache] MISS+fill` → `[oxlcache] HIT … 3.908s` 直接证明
+  save 消费的工作簿来自**缓存重建路径**(3.9s 为 HIT 重建时间特征, MISS 约 20s),
+  排除"填充静默失败透传"的疑点。
 - **真实 TP-07 增强链**(recipe 原版 enhance + 原子助手, enh_cmp.sh): 31 个成员仍仅
   `docProps/core.xml` 的 modified 时间不同; `<dcterms:created>`(模板原始创建时间
   2026-08-31T11:17:00Z)两路一致 — 缓存连创建时间戳都保真。

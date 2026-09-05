@@ -1,0 +1,19 @@
+$ docker run --rm -v <evidence-dir>:/w -w /w ubuntu-document-bench:xlsx-combo bash /w/save_matrix.sh
+(j host, 2026-09-05, seed template monthly_operations_template.xlsx)
+
+=== 1. stock save (reference, no cache) ===
+SAVEDIGEST /w/out_stock_ref.xlsx 45ef397ccadba1ac47216d0b4d4b1e2a2f2d765491566953c5b69f3ed027b106
+
+=== 2. speedups-only save (MISS parse, no cache) ===
+SAVEDIGEST /w/out_speedups.xlsx df549b4374336efe5e559b6421273328dfcf15c777b660c1a68c5b32fc49db37
+
+=== 3. combo: fill cache, then save with debug (expect HIT then save) ===
+[oxlcache] MISS+fill monthly_operations_template.xlsx data_only=False
+[oxlcache] HIT monthly_operations_template.xlsx data_only=False 3.908s
+SAVEDIGEST /w/out_combo_hit_dbg.xlsx d6ed09007113a497cb86adfde05075e9f031d799bba269860c4dc2dab0357260
+
+=== 4. member-level comparison (excluding docProps/core.xml) ===
+stock       vs speedups(MISS): 23 members, differing=['docProps/core.xml'], excluding timestamp member=[] -> IDENTICAL
+stock       vs combo(HIT)   : 23 members, differing=['docProps/core.xml'], excluding timestamp member=[] -> IDENTICAL
+speedups    vs combo(HIT)   : 23 members, differing=['docProps/core.xml'], excluding timestamp member=[] -> IDENTICAL
+SAVE-MATRIX-DONE
