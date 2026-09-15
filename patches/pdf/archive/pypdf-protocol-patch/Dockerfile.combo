@@ -1,5 +1,10 @@
 # Combined PDF image: base + zlib-ng + pypdf protocol patch, ONE command.
 #
+# ARCHIVED 2026-09-14: the pypdf protocol patch is deprecated (maintenance
+# cost > benefit), so is the pdf-generic combo image it built. Kept for
+# reference only; production image = zlib-ng alone (patches/pdf/active/zlib-ng/,
+# tag pdf-zng). Build context was patches/pdf/active/ when active.
+#
 # zlib-ng is source-built in a builder stage (cmake/ninja against the distro
 # toolchain), the pypdf protocol patch is applied in-place (2-line sed +
 # assertions). This reproduces the pdf-generic v3 image (E2E 11.98 -> 10.96s,

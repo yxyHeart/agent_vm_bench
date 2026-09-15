@@ -27,7 +27,7 @@ zlib 内部耗时 -58% (1,465→620ms/任务)。
 |------|--------|---------|
 | `workflow-aware-pipeline/` | 流程级注入 (进程合并/缓存/流水线/cl=1, 11.96→5.42s) | 对特定流程侵入, 不适用新流程; 归档为极限参考 |
 | `sve-compare256/` | zlib-ng 热点函数 SVE 向量化 | 孤立 1.8x 但真实 E2E 零收益 (疑 cracked 2×128 SVE); 待真 256-bit 硬件重估 |
-| `pypdf-protocol-patch/` | pypdf 协议继承移除 (单独 -0.22s, clone -14.4%) | 效果依赖补丁时机与镜像分层管理, 维护成本高于收益; 补丁正确可回馈 upstream |
+| `pypdf-protocol-patch/` | pypdf 协议继承移除 (单独 -0.22s, clone -14.4%; 组合构建文件 `Dockerfile.combo` 一并归档于此) | 效果依赖补丁时机与镜像分层管理, 维护成本高于收益; 补丁正确可回馈 upstream |
 | `cython-pypdf/` | pypdf Cython 编译 | 全包语义 bug, 叶模块无收益; 路线改窄接口 C 扩展 |
 
 > 历史注记: `pdf_pil_fastpng.py/.pth` 已并入 `workflow-aware-pipeline/pdf_accel.py`, 删除。

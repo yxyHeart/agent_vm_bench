@@ -106,6 +106,6 @@ SVE 版与 NEON 版在真实端到端上**零差异** (11.12 vs 11.00s, 噪声�
 
 ## 七、资产清单
 
-- 通用优化运行镜像 `ubuntu-document-bench:pdf-generic` (zlib-ng + pypdf 补丁, 已设为默认基准镜像)
+- 通用优化运行镜像 `ubuntu-document-bench:pdf-zng` (zlib-ng; pypdf 补丁已归档, 组合镜像 `pdf-generic` 不再维护)
 - 全部构建配方 (Dockerfile)、实验脚本、剖析数据与技术文档
 - 两项通用优化具备向开源社区回馈的条件 (zlib-ng 部署方案 / pypdf 协议补丁)
