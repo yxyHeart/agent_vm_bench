@@ -246,8 +246,11 @@ fix_html_links() {
         filename=$(basename "$html_file")
         log "Fixing links: $filename"
 
-        sed -i 's|https://upload.wikimedia.org/|../../upload.wikimedia.org/|g' "$html_file"
-        sed -i 's|//upload.wikimedia.org/|../../upload.wikimedia.org/|g' "$html_file"
+        # GNU sed syntax; fall back to perl for BSD sed (macOS).
+        sed -i 's|https://upload\.wikimedia\.org/|../../upload.wikimedia.org/|g' "$html_file" 2>/dev/null || \
+            perl -pi -e 's{https://upload\.wikimedia\.org/}{../../upload.wikimedia.org/}g' "$html_file"
+        sed -i 's|//upload\.wikimedia\.org/|../../upload.wikimedia.org/|g' "$html_file" 2>/dev/null || \
+            perl -pi -e 's{//upload\.wikimedia\.org/}{../../upload.wikimedia.org/}g' "$html_file"
     done
 }
 
@@ -338,6 +341,12 @@ for i in "${!PAGES[@]}"; do
         --user-agent="$UA" \
         -O "$html_file" \
         "https://en.wikipedia.org/wiki/$page" >> "$LOG_FILE" 2>&1; then
+        # Wikipedia moved thumbnails to thumb.wikimedia.org; the extractor
+        # below only matches upload.wikimedia.org URLs. Restore the legacy
+        # domain so thumbnails are extracted/downloaded/localized too
+        # (both domains serve the same file at the same path).
+        sed -i 's|//thumb\.wikimedia\.org/|//upload.wikimedia.org/|g' "$html_file" 2>/dev/null || \
+            perl -pi -e 's{//thumb\.wikimedia\.org/}{//upload.wikimedia.org/}g' "$html_file"
         log "OK HTML: $page"
         html_success=$((html_success + 1))
     else
