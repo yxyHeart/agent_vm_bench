@@ -30,8 +30,8 @@ devkit_top_down.log
 ksys.log
 ub_watch.log
 
-# Downloaded web content
-web_content/
+# Downloaded web content (benchmark page set; keep content, ignore run logs)
+web_content/download_page_.log
 
 # Document benchmark downloaded/generated assets
 dockerfile_build/document/assets/cases/pdf/input/of306_aug2023.pdf
